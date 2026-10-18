@@ -1,0 +1,18 @@
+{
+  "name": "@soloops/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Typed fetch client for the SoloOps API: CSRF header, problem+json to ApiError, response validation (ADR-0011, ADR-0013).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@soloops/contracts": "0.0.0"
+  }
+}
