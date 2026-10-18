@@ -13,7 +13,7 @@ import { createRateLimiter } from '../../platform/http/rate-limit';
 import { newId } from '../../platform/ids';
 import type { Logger } from '../../platform/logging';
 import { mapSuggestion, parseModelText, type MappingWarning } from './domain/output';
-import * as crAnalysis from './prompts/cr-analysis/v2';
+import * as crAnalysis from './prompts/cr-analysis/v3';
 import { ProviderError, type ChatModelProvider } from './providers';
 import type { ProviderHealth } from './providers/types';
 
@@ -51,10 +51,18 @@ export interface AnalyzeInput {
   projectName: string;
   projectDescription: string;
   /**
-   * Minimised context (SEC-008): keys, titles, short descriptions and whether each is agreed
-   * (baselined), so the scope check compares against agreed scope only — nothing else.
+   * Minimised context (SEC-008): keys, titles, short descriptions, acceptance criteria and whether
+   * each is agreed (baselined), so the scope check compares against agreed scope only. The full
+   * text is also what the evidence gates verify quotes against (BR-031, ADR-0023).
    */
-  requirements: { id: string; key: string; title: string; description: string; agreed: boolean }[];
+  requirements: {
+    id: string;
+    key: string;
+    title: string;
+    description: string;
+    acceptanceCriteria: string[];
+    agreed: boolean;
+  }[];
   requestText: string;
 }
 
@@ -131,7 +139,7 @@ export const OUTPUT_JSON_SCHEMA = {
     questionsForClient: strArr,
     scopeAssessment: {
       type: 'object',
-      required: ['verdict', 'rationale', 'baselineSufficient', 'evidence'],
+      required: ['verdict', 'rationale', 'baselineSufficient', 'asks'],
       properties: {
         verdict: {
           type: 'string',
@@ -139,15 +147,28 @@ export const OUTPUT_JSON_SCHEMA = {
         },
         rationale: { type: 'string' },
         baselineSufficient: { type: 'boolean' },
-        evidence: {
+        asks: {
           type: 'array',
           items: {
             type: 'object',
-            required: ['requirementKey', 'relation', 'explanation'],
+            required: ['quote', 'citations'],
             properties: {
-              requirementKey: { type: 'string' },
-              relation: { type: 'string', enum: ['COVERS', 'CHANGES', 'RELATED'] },
-              explanation: { type: 'string' },
+              quote: { type: 'string' },
+              citations: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  required: ['requirementKey', 'relation', 'quote'],
+                  properties: {
+                    requirementKey: { type: 'string' },
+                    relation: {
+                      type: 'string',
+                      enum: ['COVERS', 'CHANGES', 'CONFLICTS', 'RELATED'],
+                    },
+                    quote: { type: 'string' },
+                  },
+                },
+              },
             },
           },
         },
@@ -210,7 +231,15 @@ export function createAiService(deps: {
       const title = r.title.slice(0, 200);
       const description = budget > 400 ? r.description.slice(0, 200) : '';
       budget = Math.max(0, budget - title.length - description.length - 12);
-      return { key: r.key, title, description, agreed: r.agreed };
+      // Acceptance criteria last, while budget remains: quotes may come from any of them.
+      const acceptanceCriteria: string[] = [];
+      for (const ac of r.acceptanceCriteria.slice(0, 20)) {
+        const line = ac.slice(0, 200);
+        if (budget <= 400) break;
+        acceptanceCriteria.push(line);
+        budget = Math.max(0, budget - line.length - 8);
+      }
+      return { key: r.key, title, description, acceptanceCriteria, agreed: r.agreed };
     });
     return {
       projectName: input.projectName.slice(0, 160),
@@ -374,7 +403,8 @@ export function createAiService(deps: {
       );
 
       if (!output) throw toAppError(failure ?? 'SERVER_ERROR');
-      const mapped = mapSuggestion(output, input.requirements);
+      // Ask quotes are verified against the message the model actually saw (G3).
+      const mapped = mapSuggestion(output, input.requirements, pi.requestText);
       const warnings = pi.truncated
         ? [
             ...mapped.warnings,

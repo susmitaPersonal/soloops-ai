@@ -812,6 +812,7 @@ export function createScopeGuardService(deps: {
         key: r.key,
         title: r.title,
         description: r.description,
+        acceptanceCriteria: r.acceptanceCriteria,
         // Agreed scope = baselined requirements (BR-004); the scope check compares against these.
         agreed: r.baselineId !== null,
       }));

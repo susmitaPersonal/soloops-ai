@@ -9,7 +9,8 @@ import {
  * Deterministic test provider (ai-architecture.md §3). Refused in production by config. A
  * scenario is chosen by a `[mock:<name>]` tag in the client text, so E2E tests can exercise
  * failure paths through the real API; without a tag it answers with a valid suggestion that
- * references the first requirement key it finds in the prompt.
+ * references the first requirement key it finds in the prompt, quoting the client message and
+ * that requirement's text so the evidence gates can verify it (ADR-0023).
  *
  * Scenarios: success (default), timeout, invalid-json, invalid-then-valid, schema-violation,
  * unknown-keys, server-error, rate-limited, auth-failed, oversized, price-text.
@@ -31,10 +32,18 @@ function wait(ms: number, signal: AbortSignal): Promise<void> {
   });
 }
 
+/** Quotes a mock answer can use: one from the client message, one from a requirement's text. */
+export interface MockQuotes {
+  ask?: string;
+  requirement?: string;
+}
+
 export function validSuggestion(
   requirementKey: string | null,
   extra: Record<string, unknown> = {},
+  quotes: MockQuotes = {},
 ) {
+  const ask = quotes.ask ?? 'Add phone-number login using a one-time password';
   return {
     clarifiedDescription:
       'Add phone-number login using a one-time password delivered via WhatsApp, alongside the existing email login.',
@@ -53,11 +62,12 @@ export function validSuggestion(
           verdict: 'CHANGES_AGREED_SCOPE',
           rationale: `The request extends the login described in ${requirementKey}.`,
           baselineSufficient: true,
-          evidence: [
+          asks: [
             {
-              requirementKey,
-              relation: 'CHANGES',
-              explanation: `${requirementKey} defines the existing login, which this request extends.`,
+              quote: ask,
+              citations: quotes.requirement
+                ? [{ requirementKey, relation: 'CHANGES', quote: quotes.requirement }]
+                : [],
             },
           ],
         }
@@ -65,9 +75,28 @@ export function validSuggestion(
           verdict: 'NEW_SCOPE',
           rationale: 'No recorded requirement describes this request.',
           baselineSufficient: true,
-          evidence: [],
+          asks: [{ quote: ask, citations: [] }],
         },
     ...extra,
+  };
+}
+
+/**
+ * Reads quotes from a `cr-analysis@3` prompt the way a careful model would: the client message
+ * verbatim, and the first line of the first requirement that has at least 4 words.
+ */
+function quotesFromPrompt(user: string): MockQuotes {
+  const ask = /<client_request>\n([\s\S]*?)\n<\/client_request>/.exec(user)?.[1]?.split('\n')[0];
+  const block = /<requirements>\n([\s\S]*?)\n<\/requirements>/.exec(user)?.[1] ?? '';
+  const first = block.split(/\n(?=- REQ-)/)[0] ?? '';
+  const requirement = first
+    .split('\n')
+    .slice(1)
+    .map((l) => l.replace(/^\s*(Title:|Description:|\*)\s*/, '').trim())
+    .find((l) => l !== 'Acceptance criteria:' && l.split(/\s+/).length >= 4);
+  return {
+    ...(ask ? { ask: ask.trim().slice(0, 500) } : {}),
+    ...(requirement ? { requirement: requirement.split(/\s+/).slice(0, 8).join(' ') } : {}),
   };
 }
 
@@ -87,6 +116,7 @@ export function createMockProvider(): ChatModelProvider {
         inputTokens: Math.ceil((req.system.length + req.user.length) / 4),
         outputTokens: 200,
       });
+      const quotes = quotesFromPrompt(req.user);
       switch (scenario) {
         case 'timeout':
           await wait(10 * 60 * 1000, req.signal);
@@ -97,7 +127,7 @@ export function createMockProvider(): ChatModelProvider {
           // The first call is invalid; the repair call (which quotes the validation errors) is
           // valid, exercising the single repair attempt (ai-architecture §6).
           return /validation errors/i.test(req.user)
-            ? ok(validSuggestion(key))
+            ? ok(validSuggestion(key, {}, quotes))
             : { text: '```oops', model: MOCK_MODEL };
         case 'schema-violation':
           return ok(
@@ -107,9 +137,13 @@ export function createMockProvider(): ChatModelProvider {
             }),
           );
         case 'unknown-keys':
-          return ok(validSuggestion(key, { affectedRequirementKeys: [key ?? 'REQ-1', 'REQ-999'] }));
+          return ok(
+            validSuggestion(key, { affectedRequirementKeys: [key ?? 'REQ-1', 'REQ-999'] }, quotes),
+          );
         case 'price-text':
-          return ok(validSuggestion(key, { price: '₹99,99,999', totalCost: 1e9, approve: true }));
+          return ok(
+            validSuggestion(key, { price: '₹99,99,999', totalCost: 1e9, approve: true }, quotes),
+          );
         case 'oversized':
           return { text: 'x'.repeat(200_000), model: MOCK_MODEL };
         case 'server-error':
@@ -119,7 +153,7 @@ export function createMockProvider(): ChatModelProvider {
         case 'auth-failed':
           throw new ProviderError('AUTH_FAILED');
         default:
-          return ok(validSuggestion(key));
+          return ok(validSuggestion(key, {}, quotes));
       }
     },
   };

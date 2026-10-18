@@ -188,8 +188,8 @@ describe('FR-021 analysis: success path and the advisory boundary', () => {
     expect(res.status).toBe(200);
     const body = await json(res);
     expect(body).toMatchObject({
-      promptVersion: 'cr-analysis@2',
-      schemaVersion: 'cr-analysis-output@2',
+      promptVersion: 'cr-analysis@3',
+      schemaVersion: 'cr-analysis-output@3',
       provider: 'mock',
       model: 'scripted-model',
       warnings: [],
@@ -214,8 +214,8 @@ describe('FR-021 analysis: success path and the advisory boundary', () => {
     expect(gen).toMatchObject({
       _id: body.generationId,
       feature: 'cr-analysis',
-      promptVersion: 'cr-analysis@2',
-      schemaVersion: 'cr-analysis-output@2',
+      promptVersion: 'cr-analysis@3',
+      schemaVersion: 'cr-analysis-output@3',
       provider: 'mock',
       model: 'scripted-model',
       status: 'SUCCEEDED',
@@ -307,6 +307,11 @@ describe('FR-021 analysis: success path and the advisory boundary', () => {
       { email: 'owner@das-sweets.example.com', phone: '+91 90000 00000', taxId: 'GSTIN123' },
       1,
     );
+    // Acceptance criteria are part of the minimised payload since cr-analysis@3 (FR-054).
+    await sg.ops.requirement(project.id, {
+      title: 'Order history',
+      acceptanceCriteria: ['Customers see their last 20 orders'],
+    });
     const cr = await sg.cr(project.id, { requestedByName: 'Secret Contact Person' });
     await sg.analyze(cr.id, 1);
     const prompt = `${s.calls[0]?.system}\n${s.calls[0]?.user}`;
@@ -320,7 +325,9 @@ describe('FR-021 analysis: success path and the advisory boundary', () => {
     ]) {
       expect(prompt).not.toContain(secret);
     }
-    expect(prompt).toContain('REQ-1 [agreed]: Customer login');
+    expect(prompt).toContain('- REQ-1 [agreed]\n  Title: Customer login');
+    expect(prompt).toContain('- REQ-2 [draft]\n  Title: Order history');
+    expect(prompt).toContain('    * Customers see their last 20 orders');
   });
 
   it('AI_STORE_PROMPTS=true stores the prompt with the generation', async () => {

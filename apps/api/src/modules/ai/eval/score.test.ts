@@ -1,5 +1,6 @@
 import { scopeVerdicts } from '@soloops/contracts';
 import { describe, expect, it } from 'vitest';
+import heldout from './scope-cases-heldout.json';
 import dataset from './scope-cases.json';
 import { scoreRuns, THRESHOLDS, type EvalCase, type RunResult } from './score';
 
@@ -92,5 +93,74 @@ describe('evaluation scoring (thresholds fixed before any real-model run)', () =
     expect(s.metrics.agreementRate).toBe(0);
     expect(s.perCase.find((c) => c.id === 'N01')?.effortSpread).toBe(10);
     expect(s.checks.find((c) => c.id === 'T4')?.pass).toBe(false);
+  });
+});
+
+describe('scope-check@2 held-out dataset (written blind to the evidence gates)', () => {
+  const held = heldout.cases as EvalCase[];
+  it('UT-EVAL-06 has ~30 valid cases in every held-out category, each naming a real project', () => {
+    expect(held.length).toBeGreaterThanOrEqual(30);
+    expect(new Set(held.map((c) => c.id)).size).toBe(held.length);
+    for (const category of [
+      'full-coverage',
+      'partial-overlap',
+      'conflicting-agreed',
+      'ambiguous',
+      'new-scope',
+      'prompt-injection',
+      'invented-keys',
+      'draft-only',
+    ]) {
+      expect(
+        held.some((c) => c.category === category),
+        category,
+      ).toBe(true);
+    }
+    for (const c of held) {
+      expect(Object.keys(heldout.projects)).toContain(c.project);
+      expect(c.expected.length).toBeGreaterThan(0);
+      for (const v of c.expected) expect(scopeVerdicts).toContain(v);
+    }
+  });
+});
+
+describe('false "already covered" (T4) and "covered" recall are reported separately', () => {
+  const small: EvalCase[] = [
+    { id: 'C', category: 'c', project: 'p', request: 'r', expected: ['LIKELY_ALREADY_COVERED'] },
+    { id: 'N', category: 'n', project: 'p', request: 'r', expected: ['NEW_SCOPE'] },
+    { id: 'U', category: 'u', project: 'p', request: 'r', expected: ['UNCLEAR', 'NEW_SCOPE'] },
+  ];
+
+  it('UT-EVAL-07 counts false covered over non-covered cases only, and the model-alone rate beside it', () => {
+    const s = scoreRuns(small, [
+      run('C', { verdict: 'LIKELY_ALREADY_COVERED', modelVerdict: 'LIKELY_ALREADY_COVERED' }),
+      run('N', { verdict: 'UNCLEAR', modelVerdict: 'LIKELY_ALREADY_COVERED' }),
+      run('N', { verdict: 'LIKELY_ALREADY_COVERED', modelVerdict: 'LIKELY_ALREADY_COVERED' }),
+      run('U', { verdict: 'UNCLEAR', modelVerdict: 'UNCLEAR' }),
+    ]);
+    expect(s.metrics.falseCovered).toEqual({ count: 1, of: 3 });
+    expect(s.metrics.falseCoveredRate).toBeCloseTo(1 / 3);
+    expect(s.metrics.modelFalseCoveredRate).toBeCloseTo(2 / 3);
+    // Accuracy (T3) counts the same runs differently: 2 of 4 correct.
+    expect(s.metrics.verdictAccuracy).toBeCloseTo(0.5);
+    expect(s.checks.find((c) => c.id === 'T4')?.pass).toBe(false);
+  });
+
+  it('UT-EVAL-08 "covered" recall is the share of truly covered runs that reach "already covered"; failed runs count as misses', () => {
+    const s = scoreRuns(small, [
+      run('C', { verdict: 'LIKELY_ALREADY_COVERED' }),
+      run('C', { verdict: 'UNCLEAR' }),
+      run('C', { status: 'INVALID_OUTPUT', verdict: null }),
+      run('N', { verdict: 'NEW_SCOPE' }),
+    ]);
+    expect(s.metrics.coveredRecallCounts).toEqual({ count: 1, of: 3 });
+    expect(s.metrics.coveredRecall).toBeCloseTo(1 / 3);
+    expect(s.metrics.falseCovered).toEqual({ count: 0, of: 1 });
+  });
+
+  it('UT-EVAL-09 no covered cases → recall 0 of 0, never a division error', () => {
+    const s = scoreRuns([small[1] as EvalCase], [run('N', { verdict: 'NEW_SCOPE' })]);
+    expect(s.metrics.coveredRecallCounts).toEqual({ count: 0, of: 0 });
+    expect(s.metrics.coveredRecall).toBe(0);
   });
 });

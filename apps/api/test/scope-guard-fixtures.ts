@@ -40,10 +40,13 @@ export function scopeGuard(t: TestContext, user: User) {
   const sg = {
     ops,
     /** A project with a rate (₹1,500/h) and one baselined requirement REQ-1. */
-    async project() {
+    async project(requirementBody: Record<string, unknown> = {}) {
       const client = await ops.client();
       const project = await ops.project(client.id, { hourlyRateMinor: '150000' });
-      const requirement = await ops.requirement(project.id, { title: 'Customer login' });
+      const requirement = await ops.requirement(project.id, {
+        title: 'Customer login',
+        ...requirementBody,
+      });
       await ops.baseline(project.id);
       return { client, project, requirement };
     },

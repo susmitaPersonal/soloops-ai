@@ -57,6 +57,15 @@ export function scoreRuns(cases: readonly EvalCase[], runs: readonly RunResult[]
     (r) => !byId.get(r.caseId)?.expected.includes('LIKELY_ALREADY_COVERED'),
   );
   const falseCovered = coveredWrongPool.filter((r) => r.verdict === 'LIKELY_ALREADY_COVERED');
+  // What the model alone would have shown, before the server's evidence gates (comparison only).
+  const modelFalseCovered = coveredWrongPool.filter(
+    (r) => r.modelVerdict === 'LIKELY_ALREADY_COVERED',
+  );
+  // "Covered" recall: truly covered requests that still reach "already covered" (usefulness).
+  const coveredPool = runs.filter(
+    (r) => byId.get(r.caseId)?.expected.includes('LIKELY_ALREADY_COVERED') ?? false,
+  );
+  const coveredHit = coveredPool.filter((r) => r.verdict === 'LIKELY_ALREADY_COVERED');
   const newPool = runs.filter((r) => byId.get(r.caseId)?.expected.includes('NEW_SCOPE'));
   const falseNew = valid.filter(
     (r) => r.verdict === 'NEW_SCOPE' && !byId.get(r.caseId)?.expected.includes('NEW_SCOPE'),
@@ -104,6 +113,11 @@ export function scoreRuns(cases: readonly EvalCase[], runs: readonly RunResult[]
     citedReferences: cited,
     verdictAccuracy: rate(correct.length, runs.length),
     falseCoveredRate: rate(falseCovered.length, coveredWrongPool.length),
+    /** T4 reported on its own: counts behind the rate, separate from accuracy (T3). */
+    falseCovered: { count: falseCovered.length, of: coveredWrongPool.length },
+    modelFalseCoveredRate: rate(modelFalseCovered.length, coveredWrongPool.length),
+    coveredRecall: rate(coveredHit.length, coveredPool.length),
+    coveredRecallCounts: { count: coveredHit.length, of: coveredPool.length },
     falseNewRate: rate(falseNew.length, runs.length),
     missedNewRate: rate(missedNew.length, newPool.length),
     agreementRate: rate(perCase.filter((c) => c.agreed).length, perCase.length),

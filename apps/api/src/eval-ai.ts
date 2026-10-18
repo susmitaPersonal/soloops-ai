@@ -7,7 +7,8 @@
  *   AI_PROVIDER=openai-compatible AI_BASE_URL=http://127.0.0.1:11434/v1 AI_MODEL=qwen2.5:1.5b \
  *   AI_STRUCTURED_OUTPUT=json_schema npm run eval:ai -w @soloops/api
  *
- * Optional: EVAL_REPEATS (default 3), EVAL_OUT (JSON results path).
+ * Optional: EVAL_DATASET (`regression` = scope-cases.json, default; `heldout` =
+ * scope-cases-heldout.json), EVAL_REPEATS (default 3), EVAL_OUT (JSON results path).
  */
 import { writeFileSync } from 'node:fs';
 import { performance } from 'node:perf_hooks';
@@ -21,7 +22,8 @@ import {
   type EvalCase,
   type RunResult,
 } from './modules/ai';
-import dataset from './modules/ai/eval/scope-cases.json';
+import heldout from './modules/ai/eval/scope-cases-heldout.json';
+import regression from './modules/ai/eval/scope-cases.json';
 import { systemClock } from './platform/clock';
 import { loadConfig } from './platform/config';
 import { connectDatabase } from './platform/db';
@@ -30,7 +32,24 @@ import { AppError } from './platform/errors';
 import { newId } from './platform/ids';
 import { createLogger } from './platform/logging';
 
-type Project = (typeof dataset.projects)[keyof typeof dataset.projects];
+interface Dataset {
+  dataset: string;
+  projects: Record<
+    string,
+    {
+      name: string;
+      description: string;
+      requirements: {
+        key: string;
+        agreed: boolean;
+        title: string;
+        description: string;
+        acceptanceCriteria?: string[];
+      }[];
+    }
+  >;
+  cases: unknown[];
+}
 
 async function main() {
   if (process.env.AI_PROVIDER !== 'openai-compatible') {
@@ -39,6 +58,11 @@ async function main() {
     );
   }
   const repeats = Number(process.env.EVAL_REPEATS ?? 3);
+  const which = process.env.EVAL_DATASET ?? 'regression';
+  if (which !== 'regression' && which !== 'heldout') {
+    throw new Error('EVAL_DATASET must be "regression" or "heldout".');
+  }
+  const dataset: Dataset = which === 'heldout' ? heldout : regression;
   const rs = await MongoMemoryReplSet.create({
     replSet: { count: 1, storageEngine: 'wiredTiger' },
   });
@@ -69,10 +93,17 @@ async function main() {
     const cases = dataset.cases as EvalCase[];
     const workspaceId = newId();
     const runs: RunResult[] = [];
+    let promptVersion = '';
+    let schemaVersion = '';
     let n = 0;
     for (const c of cases) {
-      const project = dataset.projects[c.project as keyof typeof dataset.projects] as Project;
-      const requirements = project.requirements.map((r) => ({ ...r, id: newId() }));
+      const project = dataset.projects[c.project];
+      if (!project) throw new Error(`Case ${c.id} names an unknown project.`);
+      const requirements = project.requirements.map((r) => ({
+        ...r,
+        acceptanceCriteria: r.acceptanceCriteria ?? [],
+        id: newId(),
+      }));
       const keys = new Set(requirements.map((r) => r.key));
       for (let i = 0; i < repeats; i++) {
         n += 1;
@@ -91,10 +122,16 @@ async function main() {
           const gen = await db
             .tenant<{
               _id: string;
-              output: { scopeAssessment?: { evidence: { requirementKey: string }[] } } | null;
+              output: {
+                scopeAssessment?: { asks?: { citations: { requirementKey: string }[] }[] };
+              } | null;
             }>('aiGenerations', workspaceId)
             .findOne({ _id: result.generationId });
-          const cited = (gen?.output?.scopeAssessment?.evidence ?? []).map((e) => e.requirementKey);
+          const cited = (gen?.output?.scopeAssessment?.asks ?? []).flatMap((a) =>
+            a.citations.map((e) => e.requirementKey),
+          );
+          promptVersion = result.promptVersion;
+          schemaVersion = result.schemaVersion;
           runs.push({
             caseId: c.id,
             status: 'ok',
@@ -131,8 +168,8 @@ async function main() {
       provider: provider.id,
       model: provider.model,
       structuredOutput: config.AI_STRUCTURED_OUTPUT,
-      promptVersion: 'cr-analysis@2',
-      schemaVersion: 'cr-analysis-output@2',
+      promptVersion: runs.length ? promptVersion : null,
+      schemaVersion: runs.length ? schemaVersion : null,
       repeats,
       thresholds: THRESHOLDS,
       ...score,
@@ -146,6 +183,10 @@ async function main() {
         `  ${c.pass ? 'PASS' : 'FAIL'} ${c.id} ${c.name}: ${c.value.toFixed(3)} (${c.threshold})`,
       );
     }
+    const m = score.metrics;
+    console.log(
+      `False "already covered" (T4): ${m.falseCovered.count}/${m.falseCovered.of} = ${m.falseCoveredRate.toFixed(3)} (model alone ${m.modelFalseCoveredRate.toFixed(3)}); "covered" recall ${m.coveredRecallCounts.count}/${m.coveredRecallCounts.of} = ${m.coveredRecall.toFixed(3)}`,
+    );
     console.log(
       `Accuracy by category: ${score.categories.map((x) => `${x.category} ${x.accuracy.toFixed(2)}`).join(' · ')}`,
     );
