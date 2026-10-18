@@ -1,10 +1,12 @@
 # Release Readiness Audit
 
-**Date:** 2026-10-18. **Scope:** the code in the working tree after milestones M1–M5 (nothing has been committed or pushed yet). **Performed by:** the maintainer's Claude Code session, using the `soloops-security-review`, `soloops-testing` and `soloops-documentation` checklists. No reviewer agents were run for this audit; the M1 and M2 agent reviews are in [implementation status](implementation-status.md#m2-reviews). Every result below comes from a command that was actually run; anything not run is listed in [§7](#7-environment-limitations-not-verified).
+**Date:** 2026-10-18; §13 added 2026-10-19. **Scope:** the code after milestones M1–M5. For §1–§12, nothing had been committed. For §13 there are 29 local commits plus uncommitted closure changes, and nothing has been pushed. **Performed by:** the maintainer's Claude Code session, using the `soloops-security-review`, `soloops-testing` and `soloops-documentation` checklists. No reviewer agents were run for this audit; the M1 and M2 agent reviews are in [implementation status](implementation-status.md#m2-reviews). Every result below comes from a command that was actually run; anything not run is listed in [§7](#7-environment-limitations-not-verified).
 
 ## 1. Overall status
 
-> **Current status (2026-10-18, after the release closure sprint): READY WITH LIMITATIONS.** See [§12](#12-release-closure-sprint-2026-10-18). The earlier verdict below is kept for history.
+> **Current status (2026-10-19): NOT READY. One P0 is open:** the repository has no remote, so GitHub CI has never run and reviewers cannot reach the code. Every local check passes, and no code defect blocks release. See [§13](#13-final-release-closure-2026-10-19).
+>
+> **Sections §1–§12 are historical** records of earlier passes on 2026-10-18. Where they disagree with §13, §13 is current. The §12.1 verdict "READY WITH LIMITATIONS" is superseded.
 
 **Verdict: release candidate. Not released, and not yet releasable until the P0 process items in [§10](#10-p0--p1-next-actions) are done.**
 
@@ -34,6 +36,8 @@
 - Invoices are **drafts with one tax rate, not GST-compliant tax invoices** (OQ-002). The product says so on the invoice and the print view.
 
 ## 2. Requirements matrix
+
+*Historical (first pass, 2026-10-18).* The AI row's "mock and stub providers only" was superseded by real-endpoint smoke tests ([§12.4](#124-real-open-weight-ai-verification), [§13](#13-final-release-closure-2026-10-19)).
 
 Full chain per requirement: [traceability matrix](requirements-traceability.md). Summary:
 
@@ -102,6 +106,8 @@ All other principal-workflow steps (E2E-WF-02 … 12, 14) and TC-E2E-01 run. The
 
 ## 7. Environment limitations (not verified)
 
+*Historical (first pass).* Since then, Docker Compose was verified (§11) and a real AI endpoint was smoke-tested (§12.4, §13). CI on GitHub is still not run (§13).
+
 | Not verified | Why | How to verify |
 | --- | --- | --- |
 | CI on GitHub | No commit or remote yet | Commit, push, check `.github/workflows/ci.yml` |
@@ -126,6 +132,8 @@ The full list is in [known limitations](known-limitations.md). The ones a releas
 
 ## 9. Release checklist
 
+*Historical (first pass).* The current release gate is [§13.5](#135-release-gate). The "Real AI endpoint smoke test" row was later done (§12.4). "Code committed" became 29 local commits, not yet reviewed or pushed (§13).
+
 | Item | Status |
 | --- | --- |
 | All Must requirements done with passing tests | ✅ |
@@ -144,6 +152,8 @@ The full list is in [known limitations](known-limitations.md). The ones a releas
 
 ## 10. P0 / P1 next actions
 
+*Historical (first pass).* P0 items 3 and 4 were done in §12. The current list is [§13.6](#136-remaining-steps-and-owners).
+
 **P0 (before any release):**
 1. Maintainer review of M1–M5, then the first commit and push. Do not include `.env` files: secrets come from the environment only.
 2. CI green on GitHub (lint, typecheck, tests, build, docs check) on Linux.
@@ -159,6 +169,8 @@ The full list is in [known limitations](known-limitations.md). The ones a releas
 6. FR-016 audit log UI and FR-017 dashboard; S-16 "Unbilled by project"; entry editing in the UI; pagination of billable entries.
 
 ## 11. Checklist audit (second pass, 2026-10-18)
+
+*Historical (second pass).* The licence, contribution-guide and real-AI rows were resolved in §12. The current status is §13.
 
 The maintainer asked for an audit against the release checklist below, reporting gaps before any UI polish. Method: a clean copy of the working tree (no `node_modules`, build output or `.env` files) in a temp folder, set up by following the README; Docker Desktop was started for the Docker-backed checks. The temp copy and its container were removed afterwards.
 
@@ -185,6 +197,8 @@ The maintainer asked for an audit against the release checklist below, reporting
 ## 12. Release closure sprint (2026-10-18)
 
 ### 12.1 Final status: READY WITH LIMITATIONS
+
+*Superseded by [§13](#13-final-release-closure-2026-10-19) (2026-10-19).* That verdict was given while GitHub CI had never run. An independent audit then classed the missing remote and CI run as a P0 release blocker, so the current status is **NOT READY** until that is closed.
 
 - **Verified locally:**
   - the core workflow, and the security and billing integrity rules;
@@ -269,3 +283,176 @@ FR-004 is a **Should** requirement, so it is outside the Must release scope. No 
 ### 12.7 Final validation
 
 Run after the last edit of this sprint: `npx prettier --check .` exit 0; `npm run validate` exit 0 (Vitest 1051 passed, 0 failed; docs check `Checked 82 Markdown files. 0 error(s), 0 warning(s).`). Commit candidates: 380 files (`git add -n .`), secret-pattern hits: 0. Code is unchanged since the coverage and Playwright runs in §12.3 (only docs changed afterwards), so those were not repeated.
+
+## 13. Final release closure (2026-10-19)
+
+### 13.1 Status: NOT READY (one P0 open)
+
+- **P0, open: the repository is not published.** There is no Git remote, so GitHub Actions has never run and reviewers cannot reach the code. This needs a maintainer decision on the destination; it is not done by an agent. Steps: [§13.6](#136-remaining-steps-and-owners).
+- **Code readiness: no release-blocking defect is known.**
+  - An independent audit on 2026-10-18/19 (247 checklist items, three reviewer agents) found no security, approval-integrity or financial-correctness defect.
+  - Every local check passes on the working tree ([§13.4](#134-validation-run-after-these-changes)).
+  - On 2026-10-19 a fresh `git clone` of commit `89cdc6c` passed `npm ci`, `npm run validate` and `npm run test:coverage`.
+- **Still to verify by a person:**
+  - maintainer review of the commits;
+  - `npm run dev` with the browser journey from change request to invoice;
+  - a run on Linux or macOS.
+
+  §13.6 lists the steps.
+- **Do not call this READY** until the P0 is closed: both CI jobs green on GitHub, with the run URL recorded below.
+
+### 13.2 Repository state
+
+- Branch `main`, 29 commits (`0960506` … `89cdc6c`), all created on 2026-10-18 between 23:56:36 and 23:56:39 +0530 by a Claude Code session with the maintainer's Git identity. **No maintainer review is recorded.**
+- No remote, no stash. Before this closure the working tree was clean. The changes in §13.3 are **uncommitted**, left for maintainer review.
+- **Secrets and hygiene, checked 2026-10-19:**
+  - The only env files tracked are `apps/api/.env.example` and `apps/web/.env.example`, and their `SESSION_SECRET` and `AI_API_KEY` are empty.
+  - A secret-pattern scan of every tracked and changed file (private keys, AWS, OpenAI-style, GitHub, Slack and Google keys, credentialed MongoDB URIs) found one hit: the deliberate fake values in the log-redaction test `apps/api/test/platform.test.ts:313-314`.
+  - The ignored, untracked items present are only build output, coverage, `node_modules`, `e2e/test-results` and the machine-specific `docker-compose.override.yml`.
+
+### 13.3 Changes made in this closure
+
+| Finding (2026-10-19 audit ID) | Change | Files |
+| --- | --- | --- |
+| I14 (P1): the workspace home said change requests, approvals and invoices were "not available yet" | Copy corrected: the getting-started steps now continue through change request, decision (Approvals), tasks, logged work and invoice draft (Billing), with a note that only baselined or approved work can be invoiced. **Automated assertion** added to the M1 E2E journey: the "Getting started" region contains the new steps and links and does not contain "not available yet" | `apps/web/src/app/w/[workspaceId]/page.tsx`, `e2e/tests/m1-walking-skeleton.spec.ts` |
+| M13/M07/M11 (P1): documents contradicted each other about Docker and real-model verification | Every current-status statement now matches the evidence: Docker verified 2026-10-18 (§11); real model smoke-tested 2026-10-18 (UI, §12.4) and 2026-10-19 (AI service, below); CI never run. Older sections of this file and the test execution report are marked **historical** | `CLAUDE.md`, `README.md`, `ai-architecture.md`, `known-limitations.md`, `implementation-status.md`, `local-development.md`, `environment-configuration.md`, `troubleshooting.md`, `quality/testing-strategy.md`, `architecture/testing-strategy.md`, `test-execution-report.md`, `test-plan.md`, this file |
+| A20/L19/M02 (P1/P2): a "Community" module was presented as existing | README and the architecture docs now say `community` and `dashboard` are **planned, not built** | `README.md`, `backend-architecture.md`, `monorepo-structure.md`, `architecture-overview.md` |
+| A03/M06: traceability IDs without tests, and shipped features marked Blocked | TC-010.3, TC-BR-013 and TC-BR-026 now name the tests that cover them (CT-SUM-01, UT-CON-SG-01, TC-016.5, TC-017.8). Rows were corrected from Blocked to Pass with test evidence: SEC-006 AI limits, SEC-011 issue/void, FR-014 change-request links, BR-029 change requests and entries, TC-008.2. NFR-003 and NFR-014 now state what is and is not automated | `requirements-traceability.md`, `test-plan.md` |
+| B15/M05: accepted ADR-0010 promised `/api/v1/openapi.json`, which was never built | New **ADR-0021** defers the OpenAPI document beyond the MVP release. `api-design.md` and the Zod contracts are the reference. ADR-0010 is marked amended. Not implemented, per the release scope | `adr/0021-openapi-deferred-beyond-mvp.md`, `adr/0010-hono-api-on-node.md`, `adr/README.md`, `api-design.md`, `known-limitations.md` |
+| M04: `api-design.md` listed `GET …/versions/{n}`, which does not exist, and unbuilt routes without a marker | The versions row is PATCH only. Members, dashboard, audit-events and export are marked *Planned (not built)* | `api-design.md` |
+| Stale "Proposed / no code exists" status lines | Status lines updated to "implemented for M1–M5; unbuilt requirements planned". `deployment-architecture.md` now says production deployment is unverified and there is no Dockerfile. M4 and M5 are marked done in the roadmap | architecture, design and roadmap docs |
+
+No application logic, API, schema or dependency changed. The only code change is the home-page copy.
+
+### 13.4 Validation run after these changes
+
+Run on 2026-10-19 on the working tree (HEAD `89cdc6c` plus the uncommitted changes of §13.3). Windows 11, Node 22.14.0, npm 10.9.2.
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `npm run lint` | 0 | ESLint clean; "All matched files use Prettier code style!" |
+| `npm run typecheck` | 0 | api-client, contracts, api, web, e2e |
+| `npm run test:coverage` | 0 | Vitest **1051 passed, 0 failed, 0 skipped**: api 746 (95.25 % statements / 87.13 % branches), web 184 (85.05 / 80.39), contracts 85 (96.35 / 92.06), api-client 21 (100 / 86.2), config 15 (93.22 / 85.29). Every gate met |
+| `npm run build` | 0 | API bundle and Next.js production build |
+| `npm run design:contrast` | 0 | "90 pairs checked, 0 failure(s)." |
+| `npm audit --audit-level=high` | 0 | "found 0 vulnerabilities" |
+| `npm run test:e2e`, first run | 1 | 32 passed, **1 failed**, 1 skipped. The new home-page assertion used `getByRole('link', { name: 'Billing' })`, which also matched "Set your billing defaults" (strict-mode violation). Test defect: fixed with `exact: true` |
+| `npm run test:e2e`, after the fix | 0 | **33 passed, 1 skipped** (E2E-WF-13 `test.fixme`, needs FR-004) |
+| Mutation check: HEAD's old `page.tsx` restored, web rebuilt, M1 journey run | 1 (expected) | The new assertion failed on the old copy: `Expected substring: "record a change request"`. New page restored (byte-identical), web rebuilt, M1 spec 7/7 passed |
+| `node scripts/check-docs.mjs`, then `npm run lint`, after the last edit | 0 / 0 | "Checked 83 Markdown files. 0 error(s), 0 warning(s)." (82 plus ADR-0021); ESLint and Prettier clean |
+
+**Real-model re-check (2026-10-19, during the audit, before these doc changes).** A scratch script outside the repository drove the real `createAiService` and `openai-compatible` adapter against Ollama 0.40.5 `qwen2.5:1.5b` on `127.0.0.1:11434`, with a throwaway in-memory MongoDB:
+
+- `json_schema` mode: 3/3 SUCCEEDED (1.0–3.0 s).
+- `prompt` mode: 3/3 SUCCEEDED (1.9–2.1 s).
+- Closed port: health `unreachable`, then a 502 `AI_PROVIDER_ERROR` in 498 ms, with a `FAILED(NETWORK)` generation record.
+- No prompt was stored, and the canary client text never appeared in the logs.
+- Identical requests produced effort ranges from 10–30 h to 100–400 h. This proves the integration only; estimate quality is unevaluated.
+
+Ollama was stopped afterwards.
+
+### 13.5 Release gate
+
+| Area | Status |
+| --- | --- |
+| Core functionality, security and tenancy, approval and billing integrity, invoice correctness | ✅ Verified locally (tests and E2E) |
+| AI integration | ✅ Advisory and off by default. Real path smoke-tested on one small local model; **quality not evaluated** |
+| Automated tests, build, dependencies, licence | ✅ Locally, including a fresh clone (Windows 11) |
+| Documentation | ✅ Reconciled in §13.3; docs check result in §13.4 |
+| **GitHub publication and CI** | ❌ **P0 open:** no remote, never run |
+| Maintainer review of the commits | ⬜ Not done |
+| `npm run dev` and the manual browser journey | ⬜ Not done |
+| Linux or macOS | ⬜ Not done (CI on `ubuntu-latest` will cover the automated part) |
+
+### 13.6 Remaining steps and owners
+
+Every step below is for the **maintainer**. None was performed by the agent. Commands are for Git Bash or any POSIX shell. Replace `OWNER` with your GitHub user or organisation.
+
+**Step 1: Review and commit the closure changes (local only).**
+
+```bash
+git status
+git diff                                    # review every changed file
+git log --stat --reverse 89cdc6c            # review the 29 existing commits, oldest first (or use a Git UI)
+git add CLAUDE.md README.md apps/web e2e docs
+git status                                  # confirm only the intended files are staged
+git commit -m "docs, web: release closure: honest status, home-page copy, ADR-0021"
+```
+
+**Step 2: Create an empty GitHub repository.** On github.com: New repository, name `soloops-ai`, visibility of your choice. Add **no** README, licence or `.gitignore`, so the repository stays empty. Or, with the GitHub CLI (this does not push):
+
+```bash
+gh repo create OWNER/soloops-ai --public --description "Open-source operations assistant for freelance developers"
+```
+
+**Step 3: Add the remote and confirm it is empty.**
+
+```bash
+git remote add origin https://github.com/OWNER/soloops-ai.git
+git remote -v
+git ls-remote origin                        # must print nothing: an empty repository has no refs
+```
+
+If `git ls-remote` prints any ref, **stop**. Do not force-push. Run `git fetch origin` and inspect `git log origin/main` before deciding anything.
+
+**Step 4: Push `main` without overwriting.**
+
+```bash
+git push -u origin main                     # never --force; a non-empty remote makes this fail safely
+```
+
+**Step 5: Verify both GitHub Actions jobs.**
+
+```bash
+gh run list --branch main --limit 5
+gh run watch <run-id>                       # waits for the run to finish
+gh run view <run-id> --json conclusion,url,jobs --jq '{conclusion, url, jobs: [.jobs[] | {name, conclusion}]}'
+```
+
+Expected: `validate` and `docker-mongodb` both `success`. If one fails, open the log (`gh run view <run-id> --log-failed`) and the uploaded `playwright-report` artifact. Do not weaken tests to make it pass.
+
+**Step 6: Run the development server against a dedicated database.** On the maintainer machine, port 27017 is used by **another MongoDB**. The local `docker-compose.override.yml` maps Compose to 27018. The URI **must** include `directConnection=true`; without it the driver follows the replica set's advertised `localhost:27017` and writes to the other server ([troubleshooting](../engineering/troubleshooting.md)).
+
+```bash
+docker compose up -d --wait mongo
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env.local
+# Edit apps/api/.env:
+#   MONGODB_URI=mongodb://127.0.0.1:27018/?directConnection=true
+#     (on a machine without the port conflict: mongodb://localhost:27017/?replicaSet=rs0)
+#   MONGODB_DB=soloops_manual_check
+#   SESSION_SECRET=<output of: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))">
+npm run db:migrate
+docker compose exec mongo mongosh --quiet --eval "db.getMongo().getDBNames()"   # must list soloops_manual_check
+npm run dev                                 # web http://localhost:3000, API :4000
+```
+
+**Step 7: Browser journey from change request to invoice** (http://localhost:3000; AI stays off unless configured):
+
+1. Register. Confirm the home page lists the steps through Approvals and Billing and does **not** say "not available yet".
+2. Settings: tax label `GST`, tax rate `18`, default hourly rate `1500`, invoice prefix `RS`, then Save.
+3. Clients: add a client. Projects: add a project for it.
+4. Requirements: add one requirement and create a baseline.
+5. Change requests, then New: paste a client message and save the draft. Fill in the description, one acceptance criterion and one assumption; choose time-based pricing and enter confirmed hours; then Propose.
+6. Record the client decision **Approved** (name, date, channel). The version shows as approved, and the Approvals queue no longer lists it.
+7. Turn the approved version into tasks. In the project's Billing tab, log time against the new task. It shows as eligible.
+8. Draft an invoice from that work. Check that the total is hours × rate plus 18 % tax. Issue it (owner): the number is `RS-0001`. Open the print view.
+9. Optional negative check: log work against a requirement that is not baselined; it shows as ineligible with a reason.
+10. Clean up: `docker compose exec mongo mongosh --quiet --eval "db.getSiblingDB('soloops_manual_check').dropDatabase()"`. Stop the dev server with Ctrl+C.
+
+**Step 8: Record the results** in the table below, then run `npm run docs:check`:
+
+| Date | Item | Result | Evidence |
+| --- | --- | --- | --- |
+| *pending* | GitHub Actions run on `main` (both jobs) | *pending* | *run URL* |
+| *pending* | `npm run dev` and browser journey (step 7) | *pending* | *OS, browser, invoice number and total observed* |
+| *pending* | Maintainer review of the 29 commits and the closure changes | *pending* | *reviewer* |
+
+Only when the first row is green, with both jobs successful, may §13.1 change to **READY WITH LIMITATIONS**. The limitations that remain then:
+
+- no member management (FR-004; E2E-WF-13 stays `fixme`);
+- invoices are not GST-compliant tax invoices;
+- approvals are recorded, not signed;
+- AI estimate quality is unevaluated;
+- rate limits are in memory per process;
+- backup and restore have not been rehearsed.

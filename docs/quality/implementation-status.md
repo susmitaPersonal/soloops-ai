@@ -1,6 +1,6 @@
 # Implementation Status
 
-**Last updated:** 2026-10-18. **Current milestone:** M5 (Invoice drafting and AI resilience) **complete, pending maintainer review**. M1–M4 are also complete. Release status: **READY WITH LIMITATIONS** (no commit or GitHub CI run yet; see the [release readiness audit](release-readiness-audit.md#12-release-closure-sprint-2026-10-18)). **Next milestone:** M6 (MVP hardening).
+**Last updated:** 2026-10-19. **Current milestone:** M5 (Invoice drafting and AI resilience) **complete, pending maintainer review**. M1–M4 are also complete. **Release status: NOT READY.** The code is committed locally, but the repository has no remote and GitHub CI has never run (P0). The code itself passes every local check ([release readiness audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19)). **Next milestone:** M6 (MVP hardening).
 
 > This report reflects **implemented and tested code only**. Documentation does not count as implementation. Every "Done" below has passing tests quoted in the [validation log](#validation-log).
 
@@ -9,12 +9,12 @@
 | Area | Status |
 | --- | --- |
 | Documentation foundation, Claude Code skills (8) and agents (6) | Done (M0) |
-| Monorepo, tooling, CI workflow, Docker Compose | Done (M1). CI workflow written but **not yet run on GitHub** (no remote/commit yet) |
+| Monorepo, tooling, CI workflow, Docker Compose | Done (M1). Docker Compose MongoDB verified locally on 2026-10-18 (release audit §11). CI workflow written but **not yet run on GitHub**: the code is committed locally, with no remote yet |
 | Identity and workspace (FR-001, FR-002, FR-003, FR-005) | Done (M1) |
 | Platform security controls (SEC-001–007, SEC-010, SEC-011 for settings) | Done for M1 endpoints |
 | Core Ops: clients, projects, requirements, baselines, tasks (FR-010–FR-014, BR-004/005/015/029) | Done (M2; task links to approved change-request versions M4) |
 | Scope Guard: change requests, versions, hash-bound decisions, history, approvals queue (FR-020–FR-029, FR-032) | Done (M3) |
-| AI: provider port, analysis, generations, status, enablement (FR-050–FR-054) | Done (M3). Only mock and stub providers verified; no model evaluated |
+| AI: provider port, analysis, generations, status, enablement (FR-050–FR-054) | Done (M3). Automated tests use the mock provider and a local HTTP stub. One small local open-weight model (Ollama `qwen2.5:1.5b`) was smoke-tested manually on 2026-10-18 (UI) and 2026-10-19 (AI service). No model has been evaluated |
 | Delivery: tasks from approved versions (FR-030), billable entries with server eligibility (FR-040, FR-041), project overview (FR-015) | Done (M4, [ADR-0019](../architecture/adr/0019-m4-delivery-and-billable-work-implementation-choices.md)) |
 | Invoices: drafts, adjustments, owner issue with gapless numbers, void, print (FR-042–FR-046) | Done (M5, [ADR-0020](../architecture/adr/0020-m5-invoice-implementation-choices.md)) |
 | Members (FR-004), audit log UI (FR-016), dashboard (FR-017), Community | **Not started** |
@@ -40,7 +40,7 @@ The milestone plan is in the [roadmap](../product/roadmap.md). This table is the
 | npm workspaces scaffold (`apps/web`, `apps/api`, `packages/contracts`, `packages/api-client`, `packages/config`) | Done (+ `e2e`) | Root `package.json` |
 | Boundary lint rules | Done | `packages/config/eslint`, TC-ARCH-01 (13 tests) |
 | CI (lint, typecheck, test, build) | Workflow written | `.github/workflows/ci.yml`. Not executed on GitHub yet |
-| Docker Compose MongoDB replica set | Written, **not run** | `docker-compose.yml`. Docker daemon was not running on the maintainer machine. Tests used `mongodb-memory-server` (real `mongod` 8.2.6) instead |
+| Docker Compose MongoDB replica set | Written, not run at M1; **verified 2026-10-18** (release audit §11) | `docker-compose.yml`. At M1 the Docker daemon was not running, so tests used `mongodb-memory-server` (real `mongod` 8.2.6) |
 | Migration runner and identity/workspace collections | Done | `apps/api/migrations/0001-…`, runner in `platform/db/migrations.ts` |
 | `TenantCollection` | Done | `apps/api/src/platform/db/collections.ts`, platform tests |
 | Auth (register, login, logout, me) | Done | `apps/api/test/identity.test.ts` (19 tests), E2E |
@@ -103,8 +103,9 @@ Per-requirement status is in the [traceability matrix](requirements-traceability
 | Done | FR-001, FR-002, FR-003, FR-005, FR-010, FR-011, FR-012, FR-013, BR-004, BR-005, BR-029 (for clients, projects and their children), SEC-001, SEC-002, SEC-003, SEC-005, SEC-007, NFR-008, NFR-010 |
 | Done (M3–M5) | FR-014 (all links), FR-015, FR-020–FR-030, FR-032, FR-040–FR-046, FR-050–FR-054, BR-001–BR-027, BR-030 (for implemented records) |
 | Done for the implemented scope | BR-015, BR-028 (registration, settings, baseline, CR transitions, task conversion) |
-| Done for implemented endpoints (re-verify per milestone) | SEC-004, SEC-006 (auth; AI limits come with M4), SEC-010, SEC-011 (settings; issue/void/members/AI come later), NFR-009, NFR-012 (M1 and M2 screens), A11Y-001–003, A11Y-006, A11Y-007 (M1 and M2 screens), ERR-005, ERR-008, ERR-009, ERR-010 |
-| Partially done | AC-002.1: settings persist and are used as defaults for new projects (TC-002.1d); defaults for invoices wait for M5. NFR-013: `Intl`-ready money helpers exist, but UI strings are not yet centralised |
+| Done for implemented endpoints (re-verify per milestone) | SEC-004, SEC-006 (auth and AI limits), SEC-010, SEC-011 (settings, AI enablement, invoice issue and void; member management is not built), NFR-009, NFR-012 (M1–M5 screens), A11Y-001–003, A11Y-006, A11Y-007 (M1–M5 screens), ERR-005, ERR-008, ERR-009, ERR-010 |
+| Done (M5) | AC-002.1: settings persist and are used as defaults for new projects (TC-002.1d) and invoice drafts (TC-019.1) |
+| Partially done | NFR-013: `Intl`-ready money helpers exist, but UI strings are not yet centralised |
 | Not started | All other FR, BR, NFR, PRV and A11Y items |
 
 ## M1 security review
@@ -143,12 +144,14 @@ Residual risks are recorded in [known limitations](known-limitations.md#implemen
 
 ## Next actions (exact)
 
-The prioritised list is in the [release readiness audit](release-readiness-audit.md#10-p0--p1-next-actions). In short:
+The current list, with exact commands, is in [release readiness audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19). In short:
 
-1. Maintainer reviews M1–M5 and makes the first commit (nothing has been committed yet). Push it and confirm the CI workflow passes on GitHub.
-2. Run the suite against Docker Compose MongoDB (`docker compose up -d mongo`, `MONGODB_URI_TEST=… npm test -w @soloops/api`) and record the result here.
+1. **P0:** Maintainer reviews the 29 local commits and the release-closure changes. Then: create an empty GitHub repository, add it as `origin`, push `main`, and confirm both CI jobs (`validate`, `docker-mongodb`) pass. Record the run URL in the release audit.
+2. **P1:** A person runs `npm run dev` against a dedicated database and completes the browser journey from change request to invoice. Record the result in the release audit.
 3. Build FR-004 member management, then unblock E2E-WF-13.
-4. Verify one real OpenAI-compatible endpoint and build the AI evaluation harness (ai-architecture §7) before recommending any model.
+4. Build the AI evaluation harness (ai-architecture §7) before recommending any model. The real-endpoint integration is smoke-tested only.
+
+*Historical:* the earlier steps "make the first commit", "run the suite against Docker Compose MongoDB" and "verify one real endpoint" were done on 2026-10-18 and 2026-10-19 (release audit §11–§13).
 
 ## Validation log
 
@@ -185,5 +188,7 @@ Record every validation run here with its exact command and actual result.
 | 2026-10-17 (M4) | `npm run test:coverage`, `npx playwright test --repeat-each=2`, mutation script, `npm run validate` | Vitest **980 passed, 0 failed** (api 697, web 167, contracts 81, api-client 20, config 15); coverage gates met; E2E 60 passed, 6 skipped (3 blocked M5 steps × 2); 11/11 mutations caught. Details: [execution report §12](test-execution-report.md#12-m4-delivery-and-billable-work-2026-10-17) |
 | 2026-10-18 (M5) | `npm run test:coverage`, `npx playwright test --repeat-each=2`, mutation script, `npm audit --audit-level=high`, `npm run validate` | Vitest **1051 passed, 0 failed** (api 746, web 184, contracts 85, api-client 21, config 15); coverage gates met; E2E 66 passed, 2 skipped (E2E-WF-13 × 2, blocked on FR-004); 10/12 mutations caught, 2 defense-in-depth guards recorded; 0 vulnerabilities. Details: [execution report §13](test-execution-report.md#13-m5-invoices-and-ai-resilience-2026-10-18) |
 | 2026-10-18 (release sprint) | `npm run validate`, `npm run test:coverage`, Playwright (in-memory and Docker MongoDB), API suite on Docker MongoDB, real-model UI check | Vitest 1051 passed; coverage gates met; E2E 33 passed / 1 skipped in both modes; API 746/746 on Docker; Ollama `qwen2.5:1.5b`: 4/4 schema-valid with `json_schema`, 1/4 with `prompt` (safe fallback). Details: [release audit §12](release-readiness-audit.md#12-release-closure-sprint-2026-10-18) |
+| 2026-10-19 (independent audit) | Fresh `git clone` of `89cdc6c`, then `npm ci`, `npm run validate`, `npm run test:coverage`; shuffled API run (`--sequence.shuffle`, seed 20261019); real-model check through the AI service (Ollama `qwen2.5:1.5b`) | All exit 0: Vitest 1051 passed; shuffled API run 746/746; AI 3/3 `json_schema`, 3/3 `prompt`, outage → 502 with a FAILED record. Details: [release audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19) |
+| 2026-10-19 (release closure) | `npm run lint`, `typecheck`, `test:coverage`, `build`, `design:contrast`, `npm audit`, `test:e2e`, plus a mutation check of the new home-page assertion | All exit 0 after one E2E test-locator fix: Vitest 1051 passed; E2E 33 passed, 1 skipped; the assertion fails on the old home-page copy. Details: [release audit §13.4](release-readiness-audit.md#134-validation-run-after-these-changes) |
 | 2026-10-16 (M1) | `docker compose up -d mongo` | **Not run**: Docker daemon not running on this machine |
 | 2026-10-16 (M1) | CI on GitHub | **Not run**: nothing committed or pushed yet |
