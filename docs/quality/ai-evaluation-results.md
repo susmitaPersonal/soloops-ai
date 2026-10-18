@@ -152,6 +152,19 @@ Accuracy by category for 7B:
 - then decide, with the product owner, whether `baselineSufficient` should only gate "already covered";
 - then re-run both models with unchanged thresholds.
 
+## Runs 5–8: evidence-gated scope check (`cr-analysis@3`), pre-declared
+
+**Declared before any run of `cr-analysis@3`** (committed 2026-10-19, before Ollama was started):
+
+- **Code under test:** the evidence gates of [ADR-0023](../architecture/adr/0023-evidence-gated-scope-check.md) at commit `57ef21c`, with prompt `cr-analysis@3` and schema `cr-analysis-output@3`. Gate constants are fixed in `apps/api/src/modules/ai/domain/scope-gates.ts`: G1 ≥ 4 words; G4 ≥ 75% of content words; the stop-word list in that file.
+- **Datasets:** `scope-check@1` (the 23-case regression set, unchanged) and `scope-check@2` (32 held-out cases written blind to the gates and committed in `6670fa2` before any gate code existed).
+- **Runs, in this order, once each:** run 5 `qwen2.5:7b` × regression; run 6 `qwen2.5:7b` × held-out; run 7 `qwen2.5:1.5b` × regression; run 8 `qwen2.5:1.5b` × held-out.
+- **Protocol (same as run 4):** local Ollama, `AI_STRUCTURED_OUTPUT=json_schema`, temperature 0.2, `EVAL_REPEATS=3`, thresholds T1–T5 unchanged.
+- **Reported:** every run including failures; T1–T5; false "already covered" with counts and the model-alone rate; "covered" recall; latency.
+- **Rule:** no change to the gates, prompt, datasets or thresholds after seeing results. Any later change needs new held-out cases.
+
+Results: see below (added after the runs).
+
 ## Reproduce
 
 ```bash
