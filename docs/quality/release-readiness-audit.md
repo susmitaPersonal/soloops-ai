@@ -594,3 +594,31 @@ Scored on the same five theme elements as the 78% estimate given before this wor
 - **No regression run was needed:** no code changed, and the model is configuration only. The 7B model is **not** made a default or recommended.
 
 **Alignment score: unchanged at 86.** The 12 points withheld for demonstrated AI value stay withheld, because no evaluated model passes. Details: [AI evaluation results, run 4](ai-evaluation-results.md#run-4-qwen257b-compared-with-qwen2515b).
+
+## 15. Evidence-gated scope check (2026-10-19)
+
+**Why:** run 4 showed that a 7B model could tell a freelancer that billable work is "already covered" (14%), and the `@2` server rules could not detect it.
+
+**What changed** ([ADR-0023](../architecture/adr/0023-evidence-gated-scope-check.md)):
+- **Prompt and schema:** `cr-analysis@3` / `cr-analysis-output@3`. The model splits the request into asks quoted from the message and cites agreed requirements with verbatim quotes.
+- **Server-decided coverage:** the server decides coverage with gates G1–G7, and the model's verdict is reported only.
+- **UI:** the UI shows per-ask proof in words.
+- **Evidence for the evaluation:** a held-out dataset (`scope-check@2`, 32 cases) was written blind to the gates and committed before them (`6670fa2`). Runs 5–8 were pre-declared (`42cef01`).
+
+**Validation** (local, before the evaluation):
+- `npm run lint`, `typecheck`, `build`, `docs:check`: exit 0.
+- `npm run test:coverage`: 1,137 passed (api 823, web 193, contracts 85, api-client 21, config 15).
+- `npm run test:e2e`: 34 passed.
+
+**CI:**
+- CI **failed** on the pushed `6670fa2`, because prettier rejected the held-out JSON as committed.
+- `2dd24bf` excludes evaluation datasets from prettier. The six commits up to `dd3f259` were pushed together.
+
+**Evaluation** ([runs 5–8](ai-evaluation-results.md#runs-58-evidence-gated-scope-check-cr-analysis3-pre-declared)):
+- **Held-out set:** `qwen2.5:7b` passes all five thresholds. Its false "already covered" rate is 4.8%, against 41.7% for its own verdict.
+- **Regression set:** the same model still **fails**: 5.3% against ≤ 5%, and accuracy 0.62.
+- **Smaller model:** `qwen2.5:1.5b` fails both sets.
+- **Remaining failure mode:** contradictory agreed requirements remain the failure mode. **No model is recommended.**
+- **Not changed:** no threshold, dataset label or gate constant was changed after seeing results.
+
+**Still open:** the manual development-server and browser run.

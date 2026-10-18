@@ -69,7 +69,7 @@ The person-confirmed `scopeVerdict` on the version, the version hash rules, appr
 - **Decomposition.** G4 only limits omissions: up to 25% of content words can be left unquoted, and the model may split a request badly.
 - **Meaning.** Whether a quote truly means the same as the ask. G5 is lexical: a quote that shares one word but means something else can still "cover" an ask. A client who quotes a real requirement verbatim (as in held-out case H25) passes G1 and G5.
 - **Conflicts the model does not flag.** The server finds conflicts only from the model's citations.
-- **Paraphrases.** Coverage written in different words may become PARTIAL or `UNCLEAR`. That is safe, but less useful.
+- **Paraphrases.** Coverage written in different words may become PARTIAL, `UNCLEAR` or even `NEW_SCOPE` (when G5 finds no shared word, e.g. "mail" for "email", the only covering citation becomes related). Seen in the 2026-10-19 browser demo with `qwen2.5:7b`. That is safe (it becomes a priced proposal that a person can correct), but less useful.
 
 ## Consequences
 - The costly error now needs the model to quote real, agreed requirement text that is on the same topic as a real part of the message, for (nearly) the whole message.

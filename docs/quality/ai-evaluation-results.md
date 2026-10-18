@@ -4,6 +4,12 @@
 >
 > - **`qwen2.5:1.5b`** is safe but inaccurate: it never wrongly said "already covered" with the shipped prompt, but its final verdict accuracy is 30%.
 > - **`qwen2.5:7b`** judges better: its own verdict is right 71% of the time, against 51% for 1.5B. But it **fails the safety threshold**: 14% wrong "already covered" against a 5% limit, a costly error that the 1.5B model never made with the shipped prompt. See [run 4](#run-4-qwen257b-compared-with-qwen2515b).
+> - **Evidence gates (`cr-analysis@3`, runs 5–8):**
+>   - On the 32-case **held-out** set, the AI's own verdict said "already covered" wrongly in **41.7%** of uncovered runs. With SoloOps' deterministic safeguards, that fell to **4.8%** (4 of 84), and `qwen2.5:7b` passed all five thresholds there (run 6).
+>   - On the 23-case **regression** set, the same model still **fails**: 5.3% (3 of 57) against ≤ 5%, and accuracy 0.62 (run 5).
+>   - `qwen2.5:1.5b` fails both sets.
+>
+>   **This is evidence for the safeguards, not proof that the AI is reliable. No model is recommended.** Contradictory agreed requirements remain a known failure mode. See [runs 5–8](#runs-58-evidence-gated-scope-check-cr-analysis3-pre-declared).
 
 ## What is evaluated
 
@@ -163,7 +169,48 @@ Accuracy by category for 7B:
 - **Reported:** every run including failures; T1–T5; false "already covered" with counts and the model-alone rate; "covered" recall; latency.
 - **Rule:** no change to the gates, prompt, datasets or thresholds after seeing results. Any later change needs new held-out cases.
 
-Results: see below (added after the runs).
+### Results (2026-10-18 22:11–22:56 UTC = 2026-10-19 03:41–04:26 IST)
+
+Every run is reported. A first attempt at run 6 was stopped after about one minute, before it wrote any result, because its output filename contained `:`, which is invalid on Windows. It was restarted unchanged with a safe filename. Same hardware and Ollama 0.40.5 as run 4.
+
+**The held-out result and the regression result are reported separately and must not be merged.**
+
+| Metric | Threshold | Run 4 (7B, `@2`, regression) | **Run 5 (7B, regression)** | **Run 6 (7B, held-out)** | Run 7 (1.5B, regression) | Run 8 (1.5B, held-out) |
+| --- | --- | --- | --- | --- | --- | --- |
+| T1 Schema-valid | ≥ 0.95 | 1.000 ✓ | 1.000 ✓ | 1.000 ✓ | 1.000 ✓ | 1.000 ✓ |
+| T2 Invented references | ≤ 0.05 | 0.000 ✓ | 0.000 ✓ | 0.029 ✓ | 0.021 ✓ | 0.020 ✓ |
+| T3 Final verdict accuracy | ≥ 0.70 | 0.464 ✗ | 0.623 ✗ | **0.771 ✓** | 0.565 ✗ | 0.490 ✗ |
+| **T4 Wrong "already covered"** | ≤ 0.05 | 0.140 ✗ (8/57) | **0.053 ✗ (3/57)** | **0.048 ✓ (4/84)** | 0.123 ✗ (7/57) | 0.107 ✗ (9/84) |
+| AI verdict alone, wrong "covered" | — | — | 0.246 | **0.417** | 0.088 | 0.083 |
+| "Covered" recall | — | — | 1/12 = 0.08 | 9/12 = 0.75 | 7/12 = 0.58 | 1/12 = 0.08 |
+| T5 Agreement across runs | ≥ 0.70 | 0.826 ✓ | 0.913 ✓ | 0.938 ✓ | 0.435 ✗ | 0.594 ✗ |
+| **Overall** | all five | FAIL | **FAIL** (T3, T4) | **PASS** | FAIL | FAIL |
+| Latency p50 / p95 | — | 3.7 s / 5.8 s | 12.5 s / 18.2 s | 15.1 s / 21.2 s | 1.3 s / 1.9 s | 1.5 s / 2.2 s |
+
+Raw results: `docs/quality/ai-eval/scope-check-run{5,6,7,8}-*-v3.json`.
+
+### Findings
+1. **The deterministic safeguards carry the safety, not the model.**
+   - With `qwen2.5:7b`, the AI's own verdict would have called uncovered work "already covered" in 41.7% of held-out runs and 24.6% of regression runs. The gates reduced that to 4.8% and 5.3%.
+   - Prompt injection, invented keys and draft-only matches never reached "already covered" with the 7B model.
+2. **Remaining failure mode: contradictory agreed requirements. This is not solved.**
+   - All 7 remaining wrong "already covered" runs of the 7B model are conflict cases: X01 (3 of 3 runs), H11 (3 of 3) and H12 (1 of 3).
+   - Each time, the model quoted the agreed requirement that supports the request and did not cite the one that contradicts it.
+   - The server cannot find a conflict that the model does not report ([ADR-0023](../architecture/adr/0023-evidence-gated-scope-check.md#guarantees), "still model judgment").
+3. **With the 1.5B model, the gates make "already covered" more frequent, not less.**
+   - The rates are 12.3% and 10.7%, against 8.8% and 8.3% for the model's own verdicts.
+   - The server decides coverage from verified evidence. It can therefore show "covered" where the small model said something else, whenever that model's own `COVERS` citations pass the lexical gates.
+   - A possible rule ("the AI must also say covered") was identified after seeing these results. Under the pre-declared rule it was **not** applied; it needs fresh held-out cases first.
+4. **Latency rose** about 4× for 7B, because `@3` answers are longer: 15 s typical and 21 s at worst.
+
+### Conclusion
+**No model is recommended.**
+- The held-out 7B run shows the value of deterministic safeguards: a false-covered rate cut from 41.7% to 4.8% on cases written blind to the gates.
+- It does not show that the AI is reliable:
+  - the same model fails the regression set at 5.3%;
+  - conflicts between agreed requirements still get through;
+  - every verdict remains a suggestion that a person confirms.
+
 
 ## Reproduce
 

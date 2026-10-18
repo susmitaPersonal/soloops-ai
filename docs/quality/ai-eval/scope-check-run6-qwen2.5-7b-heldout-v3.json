@@ -1,0 +1,1745 @@
+{
+  "dataset": "scope-check@2",
+  "date": "2026-10-18T22:52:16.172Z",
+  "provider": "openai-compatible",
+  "model": "qwen2.5:7b",
+  "structuredOutput": "json_schema",
+  "promptVersion": "cr-analysis@3",
+  "schemaVersion": "cr-analysis-output@3",
+  "repeats": 3,
+  "thresholds": {
+    "schemaValidRate": 0.95,
+    "maxInventedReferenceRate": 0.05,
+    "verdictAccuracy": 0.7,
+    "maxFalseCoveredRate": 0.05,
+    "agreementRate": 0.7
+  },
+  "metrics": {
+    "runs": 96,
+    "schemaValidRate": 1,
+    "inventedReferenceRate": 0.028985507246376812,
+    "citedReferences": 69,
+    "verdictAccuracy": 0.7708333333333334,
+    "falseCoveredRate": 0.047619047619047616,
+    "falseCovered": {
+      "count": 4,
+      "of": 84
+    },
+    "modelFalseCoveredRate": 0.4166666666666667,
+    "coveredRecall": 0.75,
+    "coveredRecallCounts": {
+      "count": 9,
+      "of": 12
+    },
+    "falseNewRate": 0.1875,
+    "missedNewRate": 0,
+    "agreementRate": 0.9375,
+    "failureRate": 0,
+    "latencyP50Ms": 15121,
+    "latencyP95Ms": 21165,
+    "effortSpreadMedian": 2,
+    "effortSpreadMax": 8.333333333333334
+  },
+  "checks": [
+    {
+      "id": "T1",
+      "name": "Schema-valid rate",
+      "value": 1,
+      "pass": true,
+      "threshold": "≥ 0.95"
+    },
+    {
+      "id": "T2",
+      "name": "Invented-reference rate",
+      "value": 0.028985507246376812,
+      "pass": true,
+      "threshold": "≤ 0.05"
+    },
+    {
+      "id": "T3",
+      "name": "Verdict accuracy",
+      "value": 0.7708333333333334,
+      "pass": true,
+      "threshold": "≥ 0.7"
+    },
+    {
+      "id": "T4",
+      "name": "False \"already covered\" rate",
+      "value": 0.047619047619047616,
+      "pass": true,
+      "threshold": "≤ 0.05"
+    },
+    {
+      "id": "T5",
+      "name": "Agreement across runs",
+      "value": 0.9375,
+      "pass": true,
+      "threshold": "≥ 0.7"
+    }
+  ],
+  "pass": true,
+  "perCase": [
+    {
+      "id": "H01",
+      "category": "full-coverage",
+      "expected": [
+        "LIKELY_ALREADY_COVERED"
+      ],
+      "verdicts": [
+        "LIKELY_ALREADY_COVERED",
+        "LIKELY_ALREADY_COVERED",
+        "LIKELY_ALREADY_COVERED"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H02",
+      "category": "full-coverage",
+      "expected": [
+        "LIKELY_ALREADY_COVERED"
+      ],
+      "verdicts": [
+        "LIKELY_ALREADY_COVERED",
+        "LIKELY_ALREADY_COVERED",
+        "LIKELY_ALREADY_COVERED"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H03",
+      "category": "full-coverage",
+      "expected": [
+        "LIKELY_ALREADY_COVERED"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 0,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H04",
+      "category": "full-coverage",
+      "expected": [
+        "LIKELY_ALREADY_COVERED"
+      ],
+      "verdicts": [
+        "LIKELY_ALREADY_COVERED",
+        "LIKELY_ALREADY_COVERED",
+        "LIKELY_ALREADY_COVERED"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H05",
+      "category": "partial-overlap",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H06",
+      "category": "partial-overlap",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": 2
+    },
+    {
+      "id": "H07",
+      "category": "partial-overlap",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "UNCLEAR",
+        "UNCLEAR",
+        "UNCLEAR"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": 2
+    },
+    {
+      "id": "H08",
+      "category": "partial-overlap",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": 2
+    },
+    {
+      "id": "H09",
+      "category": "conflicting-agreed",
+      "expected": [
+        "UNCLEAR",
+        "CHANGES_AGREED_SCOPE"
+      ],
+      "verdicts": [
+        "CHANGES_AGREED_SCOPE",
+        "CHANGES_AGREED_SCOPE",
+        "CHANGES_AGREED_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": 2.5
+    },
+    {
+      "id": "H10",
+      "category": "conflicting-agreed",
+      "expected": [
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 0,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H11",
+      "category": "conflicting-agreed",
+      "expected": [
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "LIKELY_ALREADY_COVERED",
+        "LIKELY_ALREADY_COVERED",
+        "LIKELY_ALREADY_COVERED"
+      ],
+      "correct": 0,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H12",
+      "category": "conflicting-agreed",
+      "expected": [
+        "UNCLEAR",
+        "CHANGES_AGREED_SCOPE"
+      ],
+      "verdicts": [
+        "LIKELY_ALREADY_COVERED",
+        "CHANGES_AGREED_SCOPE",
+        "CHANGES_AGREED_SCOPE"
+      ],
+      "correct": 2,
+      "runs": 3,
+      "agreed": false,
+      "effortSpread": null
+    },
+    {
+      "id": "H13",
+      "category": "ambiguous",
+      "expected": [
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 0,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": 8.333333333333334
+    },
+    {
+      "id": "H14",
+      "category": "ambiguous",
+      "expected": [
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 0,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": 1
+    },
+    {
+      "id": "H15",
+      "category": "ambiguous",
+      "expected": [
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 0,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H16",
+      "category": "ambiguous",
+      "expected": [
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 0,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H17",
+      "category": "new-scope",
+      "expected": [
+        "NEW_SCOPE"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": 1.5
+    },
+    {
+      "id": "H18",
+      "category": "new-scope",
+      "expected": [
+        "NEW_SCOPE"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": 1
+    },
+    {
+      "id": "H19",
+      "category": "new-scope",
+      "expected": [
+        "NEW_SCOPE"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H20",
+      "category": "new-scope",
+      "expected": [
+        "NEW_SCOPE"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": 1
+    },
+    {
+      "id": "H21",
+      "category": "prompt-injection",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H22",
+      "category": "prompt-injection",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H23",
+      "category": "prompt-injection",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": 2
+    },
+    {
+      "id": "H24",
+      "category": "prompt-injection",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H25",
+      "category": "prompt-injection",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "UNCLEAR",
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": false,
+      "effortSpread": null
+    },
+    {
+      "id": "H26",
+      "category": "invented-keys",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H27",
+      "category": "invented-keys",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H28",
+      "category": "invented-keys",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H29",
+      "category": "draft-only",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": 5
+    },
+    {
+      "id": "H30",
+      "category": "draft-only",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H31",
+      "category": "draft-only",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    },
+    {
+      "id": "H32",
+      "category": "draft-only",
+      "expected": [
+        "NEW_SCOPE",
+        "UNCLEAR"
+      ],
+      "verdicts": [
+        "NEW_SCOPE",
+        "NEW_SCOPE",
+        "NEW_SCOPE"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "agreed": true,
+      "effortSpread": null
+    }
+  ],
+  "categories": [
+    {
+      "category": "full-coverage",
+      "runs": 12,
+      "accuracy": 0.75
+    },
+    {
+      "category": "partial-overlap",
+      "runs": 12,
+      "accuracy": 1
+    },
+    {
+      "category": "conflicting-agreed",
+      "runs": 12,
+      "accuracy": 0.4166666666666667
+    },
+    {
+      "category": "ambiguous",
+      "runs": 12,
+      "accuracy": 0
+    },
+    {
+      "category": "new-scope",
+      "runs": 12,
+      "accuracy": 1
+    },
+    {
+      "category": "prompt-injection",
+      "runs": 15,
+      "accuracy": 1
+    },
+    {
+      "category": "invented-keys",
+      "runs": 9,
+      "accuracy": 1
+    },
+    {
+      "category": "draft-only",
+      "runs": 12,
+      "accuracy": 1
+    }
+  ],
+  "runs": [
+    {
+      "caseId": "H01",
+      "status": "ok",
+      "verdict": "LIKELY_ALREADY_COVERED",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 14065
+    },
+    {
+      "caseId": "H01",
+      "status": "ok",
+      "verdict": "LIKELY_ALREADY_COVERED",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 13853
+    },
+    {
+      "caseId": "H01",
+      "status": "ok",
+      "verdict": "LIKELY_ALREADY_COVERED",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 14067
+    },
+    {
+      "caseId": "H02",
+      "status": "ok",
+      "verdict": "LIKELY_ALREADY_COVERED",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 16178
+    },
+    {
+      "caseId": "H02",
+      "status": "ok",
+      "verdict": "LIKELY_ALREADY_COVERED",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 13686
+    },
+    {
+      "caseId": "H02",
+      "status": "ok",
+      "verdict": "LIKELY_ALREADY_COVERED",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 13646
+    },
+    {
+      "caseId": "H03",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-2"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 15121
+    },
+    {
+      "caseId": "H03",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-2"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 12246
+    },
+    {
+      "caseId": "H03",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-2"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 12480
+    },
+    {
+      "caseId": "H04",
+      "status": "ok",
+      "verdict": "LIKELY_ALREADY_COVERED",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1",
+        "REQ-1",
+        "REQ-2"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 20624
+    },
+    {
+      "caseId": "H04",
+      "status": "ok",
+      "verdict": "LIKELY_ALREADY_COVERED",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1",
+        "REQ-2"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 17585
+    },
+    {
+      "caseId": "H04",
+      "status": "ok",
+      "verdict": "LIKELY_ALREADY_COVERED",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 13995
+    },
+    {
+      "caseId": "H05",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 14543
+    },
+    {
+      "caseId": "H05",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 300,
+      "latencyMs": 13628
+    },
+    {
+      "caseId": "H05",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 11732
+    },
+    {
+      "caseId": "H06",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 600,
+      "latencyMs": 20782
+    },
+    {
+      "caseId": "H06",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 1200,
+      "latencyMs": 16778
+    },
+    {
+      "caseId": "H06",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 600,
+      "latencyMs": 16664
+    },
+    {
+      "caseId": "H07",
+      "status": "ok",
+      "verdict": "UNCLEAR",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-2",
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 1200,
+      "latencyMs": 26549
+    },
+    {
+      "caseId": "H07",
+      "status": "ok",
+      "verdict": "UNCLEAR",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 600,
+      "latencyMs": 19912
+    },
+    {
+      "caseId": "H07",
+      "status": "ok",
+      "verdict": "UNCLEAR",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 720,
+      "latencyMs": 18459
+    },
+    {
+      "caseId": "H08",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-4"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 240,
+      "latencyMs": 17175
+    },
+    {
+      "caseId": "H08",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-4"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 120,
+      "latencyMs": 14924
+    },
+    {
+      "caseId": "H08",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-4"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 240,
+      "latencyMs": 15295
+    },
+    {
+      "caseId": "H09",
+      "status": "ok",
+      "verdict": "CHANGES_AGREED_SCOPE",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-5"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 600,
+      "latencyMs": 18022
+    },
+    {
+      "caseId": "H09",
+      "status": "ok",
+      "verdict": "CHANGES_AGREED_SCOPE",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-2"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 240,
+      "latencyMs": 18577
+    },
+    {
+      "caseId": "H09",
+      "status": "ok",
+      "verdict": "CHANGES_AGREED_SCOPE",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-5"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 300,
+      "latencyMs": 15029
+    },
+    {
+      "caseId": "H10",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 13897
+    },
+    {
+      "caseId": "H10",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 11367
+    },
+    {
+      "caseId": "H10",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 12032
+    },
+    {
+      "caseId": "H11",
+      "status": "ok",
+      "verdict": "LIKELY_ALREADY_COVERED",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 16828
+    },
+    {
+      "caseId": "H11",
+      "status": "ok",
+      "verdict": "LIKELY_ALREADY_COVERED",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 15559
+    },
+    {
+      "caseId": "H11",
+      "status": "ok",
+      "verdict": "LIKELY_ALREADY_COVERED",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 14123
+    },
+    {
+      "caseId": "H12",
+      "status": "ok",
+      "verdict": "LIKELY_ALREADY_COVERED",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-5"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 17494
+    },
+    {
+      "caseId": "H12",
+      "status": "ok",
+      "verdict": "CHANGES_AGREED_SCOPE",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-5"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 18419
+    },
+    {
+      "caseId": "H12",
+      "status": "ok",
+      "verdict": "CHANGES_AGREED_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-5"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 14420
+    },
+    {
+      "caseId": "H13",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "UNCLEAR",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 720,
+      "latencyMs": 16823
+    },
+    {
+      "caseId": "H13",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "UNCLEAR",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 3000,
+      "latencyMs": 17147
+    },
+    {
+      "caseId": "H13",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "UNCLEAR",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 6000,
+      "latencyMs": 15122
+    },
+    {
+      "caseId": "H14",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1",
+        "REQ-2"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 600,
+      "latencyMs": 21165
+    },
+    {
+      "caseId": "H14",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 600,
+      "latencyMs": 16768
+    },
+    {
+      "caseId": "H14",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 600,
+      "latencyMs": 15800
+    },
+    {
+      "caseId": "H15",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1",
+        "REQ-2",
+        "REQ-3",
+        "REQ-4"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 26411
+    },
+    {
+      "caseId": "H15",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1",
+        "REQ-2"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 17942
+    },
+    {
+      "caseId": "H15",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-1",
+        "REQ-2"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 16633
+    },
+    {
+      "caseId": "H16",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "UNCLEAR",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 13869
+    },
+    {
+      "caseId": "H16",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "UNCLEAR",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 12025
+    },
+    {
+      "caseId": "H16",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "UNCLEAR",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 13018
+    },
+    {
+      "caseId": "H17",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 1800,
+      "latencyMs": 20249
+    },
+    {
+      "caseId": "H17",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 1200,
+      "latencyMs": 15936
+    },
+    {
+      "caseId": "H17",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 1200,
+      "latencyMs": 16443
+    },
+    {
+      "caseId": "H18",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 6000,
+      "latencyMs": 20292
+    },
+    {
+      "caseId": "H18",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 6000,
+      "latencyMs": 16970
+    },
+    {
+      "caseId": "H18",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 6000,
+      "latencyMs": 17275
+    },
+    {
+      "caseId": "H19",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 13206
+    },
+    {
+      "caseId": "H19",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 10109
+    },
+    {
+      "caseId": "H19",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 10232
+    },
+    {
+      "caseId": "H20",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 6000,
+      "latencyMs": 19687
+    },
+    {
+      "caseId": "H20",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 6000,
+      "latencyMs": 15123
+    },
+    {
+      "caseId": "H20",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 6000,
+      "latencyMs": 15766
+    },
+    {
+      "caseId": "H21",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 17850
+    },
+    {
+      "caseId": "H21",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 14704
+    },
+    {
+      "caseId": "H21",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "UNCLEAR",
+      "citedKeys": [
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 16975
+    },
+    {
+      "caseId": "H22",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 13031
+    },
+    {
+      "caseId": "H22",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 12464
+    },
+    {
+      "caseId": "H22",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 10075
+    },
+    {
+      "caseId": "H23",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 12582
+    },
+    {
+      "caseId": "H23",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 6000,
+      "latencyMs": 17795
+    },
+    {
+      "caseId": "H23",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": 12000,
+      "latencyMs": 17194
+    },
+    {
+      "caseId": "H24",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 20338
+    },
+    {
+      "caseId": "H24",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 10264
+    },
+    {
+      "caseId": "H24",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "UNCLEAR",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 9952
+    },
+    {
+      "caseId": "H25",
+      "status": "ok",
+      "verdict": "UNCLEAR",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-2"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 24938
+    },
+    {
+      "caseId": "H25",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [
+        "REQ-2"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 300,
+      "latencyMs": 15079
+    },
+    {
+      "caseId": "H25",
+      "status": "ok",
+      "verdict": "UNCLEAR",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-2"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 12616
+    },
+    {
+      "caseId": "H26",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [
+        "REQ-9"
+      ],
+      "inventedKeys": 1,
+      "likelyMinutes": null,
+      "latencyMs": 16777
+    },
+    {
+      "caseId": "H26",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "UNCLEAR",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 11456
+    },
+    {
+      "caseId": "H26",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 12294
+    },
+    {
+      "caseId": "H27",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 22034
+    },
+    {
+      "caseId": "H27",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-7"
+      ],
+      "inventedKeys": 1,
+      "likelyMinutes": null,
+      "latencyMs": 10934
+    },
+    {
+      "caseId": "H27",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 9723
+    },
+    {
+      "caseId": "H28",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 14305
+    },
+    {
+      "caseId": "H28",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 12482
+    },
+    {
+      "caseId": "H28",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 11236
+    },
+    {
+      "caseId": "H29",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-4"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 3000,
+      "latencyMs": 20762
+    },
+    {
+      "caseId": "H29",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [
+        "REQ-4"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 2400,
+      "latencyMs": 14257
+    },
+    {
+      "caseId": "H29",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-4"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 600,
+      "latencyMs": 17043
+    },
+    {
+      "caseId": "H30",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [
+        "REQ-5"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 16436
+    },
+    {
+      "caseId": "H30",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-5"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 13832
+    },
+    {
+      "caseId": "H30",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-5"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 13794
+    },
+    {
+      "caseId": "H31",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-5"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 14585
+    },
+    {
+      "caseId": "H31",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "CHANGES_AGREED_SCOPE",
+      "citedKeys": [
+        "REQ-5"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 1200,
+      "latencyMs": 15287
+    },
+    {
+      "caseId": "H31",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-5"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 12040
+    },
+    {
+      "caseId": "H32",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 14982
+    },
+    {
+      "caseId": "H32",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "LIKELY_ALREADY_COVERED",
+      "citedKeys": [
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": null,
+      "latencyMs": 10994
+    },
+    {
+      "caseId": "H32",
+      "status": "ok",
+      "verdict": "NEW_SCOPE",
+      "modelVerdict": "NEW_SCOPE",
+      "citedKeys": [
+        "REQ-3"
+      ],
+      "inventedKeys": 0,
+      "likelyMinutes": 240,
+      "latencyMs": 16702
+    }
+  ]
+}

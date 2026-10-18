@@ -62,7 +62,28 @@ AI only **suggests**: a scope verdict with evidence, change-request details, que
   - It **failed the safety threshold**: 14% of its answers wrongly said "already covered", against a 5% limit.
   - The server rules still caught its prompt-injection answers.
 
+  Then **deterministic evidence gates** were added ([ADR-0023](docs/architecture/adr/0023-evidence-gated-scope-check.md)). The AI must quote the client's message and the agreed requirements word for word, and SoloOps, not the AI, decides "already covered":
+  - On 32 **held-out** cases written before the gates existed, `qwen2.5:7b`'s own verdict wrongly said "already covered" in **41.7%** of uncovered runs. With SoloOps' safeguards, that fell to **4.8%**, and the run passed all five thresholds.
+  - On the 23-case regression set, the same model still **fails**: 5.3% against the 5% limit.
+  - Contradictory agreed requirements remain a known failure mode, and `qwen2.5:1.5b` fails both sets ([runs 5–8](docs/quality/ai-evaluation-results.md#runs-58-evidence-gated-scope-check-cr-analysis3-pre-declared)).
+
   The integration is proven, but **neither model's scope verdicts are reliable, and no model is recommended**. Every verdict stays a suggestion that a person confirms. Use `AI_STRUCTURED_OUTPUT=json_schema` for small local models. Re-run `npm run eval:ai` for any other model. See [environment configuration](docs/engineering/environment-configuration.md) and [AI architecture](docs/architecture/ai-architecture.md).
+
+### Reproduce the AI evaluation
+
+Everything runs locally, and no AI API key is needed. The raw output of every published run is in [docs/quality/ai-eval/](docs/quality/ai-eval/).
+
+```bash
+ollama pull qwen2.5:7b                     # or qwen2.5:1.5b
+# in apps/api/.env:
+#   AI_PROVIDER=openai-compatible
+#   AI_BASE_URL=http://localhost:11434/v1
+#   AI_MODEL=qwen2.5:7b
+#   AI_STRUCTURED_OUTPUT=json_schema
+EVAL_DATASET=heldout EVAL_REPEATS=3 EVAL_OUT=my-run.json npm run eval:ai -w @soloops/api
+```
+
+`EVAL_DATASET` is `regression` (the default, 23 cases) or `heldout` (32 cases). Compare `my-run.json` with the published JSON for the same model and dataset. Small differences between runs are expected.
 
 ## Testing
 
