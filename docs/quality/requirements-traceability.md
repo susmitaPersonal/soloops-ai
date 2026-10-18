@@ -22,7 +22,7 @@ Chain: **Requirement → User story → Acceptance criteria → Design/module �
 | FR-016 | S | US-014 | AC-014.1 | audit | `{ws}/audit-events` · S-13 | TC-014.1 | Planned |
 | FR-017 | S | US-026 | AC-026.1–.4 | dashboard | `GET {ws}/dashboard` · S-14 | TC-026.1–.4 | Planned |
 | FR-020 | M | US-008 | AC-008.1–.2 | scope-guard | `…/change-requests` · S-06 | TC-008.1–.2 | Done (M3) |
-| FR-021 | M | US-009 | AC-009.1, .3, .5–.8 | scope-guard, ai | `…/versions/{n}/analyze` · S-07 | TC-009.1, .3, .5, .6, TC-AI-01–05, UT-SCOPE-01–08, IT-SCOPE-01–07 (`scope-check.test.ts`), CT-SC-01–03, CT-SUM-03, UT-HASH-SC-01/02, E2E-WF-04…07 (scope check) | Done (M3; scope check added at release closure, ADR-0022). Real model evaluated 2026-10-19: `qwen2.5:1.5b` **fails** the accuracy threshold ([AI evaluation results](ai-evaluation-results.md)) |
+| FR-021 | M | US-009 | AC-009.1, .3, .5–.8 | scope-guard, ai | `…/versions/{n}/analyze` · S-07 | TC-009.1, .3, .5, .6, TC-AI-01–05, UT-SCOPE-01–08, IT-SCOPE-01–07 (`scope-check.test.ts`), CT-SC-01–03, CT-SUM-03, UT-HASH-SC-01/02, E2E-WF-04…07 (scope check) | Done (M3; scope check added at release closure, ADR-0022). Real models evaluated 2026-10-19: `qwen2.5:1.5b` fails accuracy; `qwen2.5:7b` fails accuracy and the costly-error threshold ([AI evaluation results](ai-evaluation-results.md)) |
 | FR-022 | M | US-009, US-010 | AC-009.2 | scope-guard | `PATCH …/versions/{n}` · S-07 | TC-009.2 | Done (M3) |
 | FR-023 | M | US-010 | AC-010.1–.3 | scope-guard | propose · S-07 | TC-010.1–.3 | Done (M3) |
 | FR-024 | M | US-011 | AC-011.1–.2 | scope-guard | `…/propose` · S-07 | TC-011.1–.2, TC-BR-008 | Done (M3) |

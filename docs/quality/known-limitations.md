@@ -79,8 +79,9 @@ The current verification status, with evidence, is in [release readiness audit ย
 
 | Limitation | Reason / reference |
 | --- | --- |
-| **The AI scope check is not accurate with the only evaluated model.** `qwen2.5:1.5b` reached 30% final verdict accuracy against a 70% threshold; most of its verdicts end as `UNCLEAR` because its evidence contradicts them. It never wrongly said "already covered" with the shipped prompt. No model is recommended | [AI evaluation results](ai-evaluation-results.md) |
-| Only one small model was evaluated, on one machine, with 23 synthetic cases. Larger open models are not evaluated yet | ai-architecture ยง7 |
+| **The AI scope check is not accurate with `qwen2.5:1.5b`.** It reached 30% final verdict accuracy against a 70% threshold; most of its verdicts end as `UNCLEAR` because its evidence contradicts them. It never wrongly said "already covered" with the shipped prompt. No model is recommended | [AI evaluation results](ai-evaluation-results.md) |
+| **A larger model is not safe enough either.** `qwen2.5:7b` judged better (71% of raw verdicts right) but wrongly said "already covered" in 14% of runs, against a 5% limit. That error would tell a freelancer that billable work is free. Two models were evaluated, on one machine, with 23 synthetic cases | [AI evaluation results, run 4](ai-evaluation-results.md#run-4-qwen257b-compared-with-qwen2515b) |
+| The model's `baselineSufficient` flag is unreliable in both models, so correct "new scope" verdicts are shown as `UNCLEAR`. Changing that rule needs held-out cases first, not the same 23 | AI evaluation results, run 4 |
 | Members are added by the email of an existing SoloOps account only: no invitations, no role changes, no ownership transfer. New members are always `MEMBER`; a second owner can only exist through data created outside the app | FR-004 scope, ADR-0022 |
 | Adding a member by email tells an owner whether that email has an account. Registration already reveals this | SEC-006, AC-001.2 |
 | A workspace has at most 50 members, listed without pagination | ADR-0022 |

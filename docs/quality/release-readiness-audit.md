@@ -455,13 +455,13 @@ Only when the manual run row (step 7) succeeds may §13.1 change to **READY WITH
 - *(superseded by §14: members now exist and E2E-WF-13 runs; the AI scope check is evaluated and fails its accuracy threshold)*
 - invoices are not GST-compliant tax invoices;
 - approvals are recorded, not signed;
-- AI scope-verdict accuracy fails its threshold with the only evaluated model, and effort estimates are unevaluated;
+- AI scope verdicts fail the thresholds with both evaluated models (1.5B on accuracy; 7B on accuracy and costly errors), and effort estimates are unevaluated;
 - rate limits are in memory per process;
 - backup and restore have not been rehearsed.
 
 ## 14. Theme alignment: AI scope check and members (2026-10-19)
 
-> **Status: not yet release-ready.** The P0 from §13 stayed closed for `def722b`, but the work below is **uncommitted and not CI-verified**, and the manual development-server and browser run is still open. Everything below was run locally on Windows 11.
+> **Status: not yet release-ready.** The work below was pushed as `2332a69`, and **both CI jobs passed** ([run](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39166807492)). The manual development-server and browser run is still open. Everything below was run locally on Windows 11.
 
 ### 14.1 Official challenge criteria (verified from the challenge page on 2026-10-19)
 
@@ -555,13 +555,42 @@ Scored on the same five theme elements as the 78% estimate given before this wor
   - Should: 8/11 (FR-004 added).
   - Could: 1/4.
   - Weighted: (78 + 16 + 1) / 104 = **91%** (89% before).
-- **Demonstrated AI quality:** **not proven.** T3 fails for the only evaluated model.
+- **Demonstrated AI quality:** **not proven.** Both evaluated models fail (§14.6).
 - **Market validation:** none. No users, no payments.
 
 ### 14.5 What cannot honestly be marked complete
 
-1. **AI verdict accuracy.** T3 fails for `qwen2.5:1.5b`. The next step is to evaluate a larger open-weight model with the same command, after the maintainer approves the download (several GB).
-2. **CI on the new work.** It is not committed or pushed, so it has not run in CI.
+1. **AI verdict accuracy and safety.** T3 fails for `qwen2.5:1.5b`. The 7B model was then evaluated (§14.6) and fails T3 and the costly-error threshold T4.
+2. *(Closed: CI passed on `2332a69`; both jobs, [run](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39166807492).)*
 3. **The manual development-server and browser journey.** Still not done.
 4. **Willingness to pay and real users.** No evidence.
 5. **The human rubric for AI proposal text.** Not built.
+
+### 14.6 Larger model: `qwen2.5:7b` (2026-10-19)
+
+**Checks before downloading:**
+- Disk: 74.8 GB free.
+- GPU: RTX 4070 with 12 GB VRAM, about 7 GB free.
+- RAM: 31 GB.
+
+**The download:** `ollama pull qwen2.5:7b`, 4.7 GB, digest verified.
+
+**The run:** one pre-declared evaluation (69 analyses) with the same dataset, shipped prompt, server rules and thresholds. No code, prompt, dataset or threshold changed.
+
+**Results:**
+
+| Check | Result | Threshold | |
+| --- | --- | --- | --- |
+| T1 Schema-valid | 1.000 | ≥ 0.95 | ✓ |
+| T2 Invented references | 0.000 | ≤ 0.05 | ✓ |
+| T3 Verdict accuracy | **0.464** | ≥ 0.70 | ✗ |
+| T4 Wrong "already covered" | **0.140** | ≤ 0.05 | ✗ |
+| T5 Agreement | 0.826 | ≥ 0.70 | ✓ |
+
+- The model ran 100% on GPU, using 4.7 GB of extra VRAM, at p50 3.7 s and p95 5.8 s per analysis (versus 1.2 s and 1.7 s for 1.5B).
+- **Better judgement, worse safety.** Its own verdicts were right 71% of the time (1.5B: 51%), but 8 runs wrongly said "already covered" with structurally valid evidence (X01 ×3, A03 ×2, K01 ×2, P01 ×1).
+- **The server blocked the injected "already covered" answers** on I02 (3 of 3).
+- **Every correct "new scope" was downgraded** because the model sets `baselineSufficient: false`. That rule was **not** changed after seeing these results (no post-hoc tuning on the same 23 cases), and changing it would not fix T4.
+- **No regression run was needed:** no code changed, and the model is configuration only. The 7B model is **not** made a default or recommended.
+
+**Alignment score: unchanged at 86.** The 12 points withheld for demonstrated AI value stay withheld, because no evaluated model passes. Details: [AI evaluation results, run 4](ai-evaluation-results.md#run-4-qwen257b-compared-with-qwen2515b).

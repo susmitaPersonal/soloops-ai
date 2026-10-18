@@ -6,7 +6,7 @@
 Client → Project → Requirement → Change Request → Approval → Task → Billable Work → Invoice Draft
 ```
 
-> **Project status: release candidate.** M1–M5 plus **workspace members** (FR-004) and the **AI scope check** (FR-021) are implemented and pass the full local test suite. The repository is published and CI passed on `def722b`, which **predates** the scope check and members; that newer work is not yet pushed or CI-verified. Still open: a manual development-server and browser run ([release audit §14](docs/quality/release-readiness-audit.md#14-theme-alignment-ai-scope-check-and-members-2026-10-19)). Working and tested: registration, sign-in, sessions, workspace isolation, members, billing settings, clients, projects, requirements, scope baselines, tasks, **change requests with immutable hash-bound versions, an evidence-bound AI scope check, recorded client decisions**, **tasks from approved change requests, billable work with server-side eligibility, and invoice drafts with owner-only issue, gapless numbers, void and print**. Invoices are drafts with a single tax rate, not GST-compliant tax invoices. The AI scope check was evaluated with one small local model and **failed** its accuracy threshold, so no model is recommended ([results](docs/quality/ai-evaluation-results.md)). See [implementation status](docs/quality/implementation-status.md) and the [roadmap](docs/product/roadmap.md). Built for Hacktoberfest 2026, Week 2.
+> **Project status: release candidate.** M1–M5 plus **workspace members** (FR-004) and the **AI scope check** (FR-021) are implemented and pass the full local test suite. The repository is published, and both CI jobs passed on `2332a69`, which includes the scope check and members ([run](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39166807492)). Still open: a manual development-server and browser run ([release audit §14](docs/quality/release-readiness-audit.md#14-theme-alignment-ai-scope-check-and-members-2026-10-19)). Working and tested: registration, sign-in, sessions, workspace isolation, members, billing settings, clients, projects, requirements, scope baselines, tasks, **change requests with immutable hash-bound versions, an evidence-bound AI scope check, recorded client decisions**, **tasks from approved change requests, billable work with server-side eligibility, and invoice drafts with owner-only issue, gapless numbers, void and print**. Invoices are drafts with a single tax rate, not GST-compliant tax invoices. The AI scope check was evaluated with two local open-weight models (`qwen2.5:1.5b` and `qwen2.5:7b`). **Both failed** the pre-set thresholds, so no model is recommended ([results](docs/quality/ai-evaluation-results.md)). See [implementation status](docs/quality/implementation-status.md) and the [roadmap](docs/product/roadmap.md). Built for Hacktoberfest 2026, Week 2.
 
 ## Why
 
@@ -56,7 +56,13 @@ AI only **suggests**: a scope verdict with evidence, change-request details, que
   - It **passed** schema validity (100%), invented references (3%), agreement across runs (87%), and **0% wrong "already covered"** verdicts, the costly mistake.
   - It **failed** verdict accuracy: 30% against a 70% threshold. Most verdicts end as Unclear because this small model's evidence contradicts its own verdicts.
 
-  The integration is proven and the safety rules held; **this model's scope verdicts are not accurate, and no model is recommended**. Use `AI_STRUCTURED_OUTPUT=json_schema` for small local models. Re-run `npm run eval:ai` for any other model. See [environment configuration](docs/engineering/environment-configuration.md) and [AI architecture](docs/architecture/ai-architecture.md).
+  A larger model, **`qwen2.5:7b`**, was then evaluated the same way:
+  - Its own judgement was better: 71% of its raw verdicts were right, and it cited no invented requirements.
+  - Its final accuracy was 46% (threshold 70%).
+  - It **failed the safety threshold**: 14% of its answers wrongly said "already covered", against a 5% limit.
+  - The server rules still caught its prompt-injection answers.
+
+  The integration is proven, but **neither model's scope verdicts are reliable, and no model is recommended**. Every verdict stays a suggestion that a person confirms. Use `AI_STRUCTURED_OUTPUT=json_schema` for small local models. Re-run `npm run eval:ai` for any other model. See [environment configuration](docs/engineering/environment-configuration.md) and [AI architecture](docs/architecture/ai-architecture.md).
 
 ## Testing
 
@@ -72,7 +78,7 @@ npm run test:e2e     # Playwright, after npm run build
 - Invoices are **drafts with one tax rate**, not GST-compliant tax invoices. There are no payments, credit notes or e-invoicing.
 - Teams: owners add people who already have an account as members. There are no invitations, role changes or ownership transfer, and only owners issue or void invoices.
 - Client approvals are recorded by the freelancer (with evidence and a content hash), not signed by the client.
-- AI scope verdicts are **not accurate** with the only evaluated model (`qwen2.5:1.5b`: 30% against a 70% threshold), and effort estimates are unevaluated. The app shows Unclear rather than a wrong verdict, and a person always decides.
+- AI scope verdicts are **not reliable** with either evaluated model: `qwen2.5:1.5b` reached 30% accuracy, and `qwen2.5:7b` reached 46% with 14% costly "already covered" errors, against thresholds of 70% and 5%. Effort estimates are unevaluated. The app shows Unclear rather than a wrong verdict, and a person always decides.
 
 Full list: [known limitations](docs/quality/known-limitations.md). Release status: [release readiness audit](docs/quality/release-readiness-audit.md).
 
