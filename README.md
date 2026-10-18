@@ -6,7 +6,7 @@
 Client → Project → Requirement → Change Request → Approval → Task → Billable Work → Invoice Draft
 ```
 
-> **Project status: Invoices (M5), pending release review.** Registration, sign-in, sessions, workspace isolation, billing settings, clients, projects, requirements, scope baselines, tasks, **change requests with immutable hash-bound versions, recorded client decisions, advisory AI analysis** (OpenAI-compatible endpoint or none), **tasks from approved change requests, billable work with server-side eligibility, and invoice drafts with owner-only issue, gapless numbers, void and print** work and are tested. Invoices are drafts with a single tax rate, not GST-compliant tax invoices. Member management is not implemented yet. No AI model has been evaluated or is recommended. See [implementation status](docs/quality/implementation-status.md) and the [roadmap](docs/product/roadmap.md). Built for Hacktoberfest 2026, Week 2.
+> **Project status: M1–M5 implemented; release candidate, not yet released.** The repository has not been published, and GitHub CI has never run ([release audit §13](docs/quality/release-readiness-audit.md#13-final-release-closure-2026-10-19)). Registration, sign-in, sessions, workspace isolation, billing settings, clients, projects, requirements, scope baselines, tasks, **change requests with immutable hash-bound versions, recorded client decisions, advisory AI analysis** (OpenAI-compatible endpoint or none), **tasks from approved change requests, billable work with server-side eligibility, and invoice drafts with owner-only issue, gapless numbers, void and print** work and are tested. Invoices are drafts with a single tax rate, not GST-compliant tax invoices. Member management is not implemented yet. No AI model has been evaluated or is recommended. See [implementation status](docs/quality/implementation-status.md) and the [roadmap](docs/product/roadmap.md). Built for Hacktoberfest 2026, Week 2.
 
 ## Why
 
@@ -21,7 +21,7 @@ Freelancers get extra requests over chat and calls, say yes, and later can't pro
 ## Free and open
 
 - Licensed under [MIT](LICENSE) (confirmed by the maintainer on 2026-10-18, [OQ-001](docs/product/open-questions.md)). Free for everyone, with no paid tiers.
-- Functional modules: **Core Ops**, **Scope Guard**, **Billing**, **Open AI** (adapters for open-weight models) and **Community**. These are modules, not pricing tiers.
+- Functional modules: **Core Ops**, **Scope Guard**, **Billing** and **Open AI** (adapters for open-weight models) are implemented. **Community** (templates, integrations, data export) is planned and **not built yet**. These are modules, not pricing tiers.
 - **No proprietary AI API required.** AI is optional and off by default. Point it at any OpenAI-compatible endpoint serving an open-weight model, whether hosted or self-hosted. A hosted endpoint, server or database may cost money, and the app itself does not.
 
 ## Stack
@@ -51,7 +51,7 @@ AI is **optional and off by default** (`AI_PROVIDER=none`). To use it, point `AI
 
 AI only **suggests** change-request details and an effort range. People confirm the effort, prices are computed by the server, and only a recorded client decision approves anything. If the AI times out, fails or returns invalid output, the draft stays unchanged and the user continues manually.
 
-**Verification status:** the adapter is tested against a local HTTP stub, and the fallback with the mock provider. One **integration smoke test with a real open-weight model** passed on 2026-10-18: Ollama 0.40.5 serving `qwen2.5:1.5b` locally, through the real UI. With `AI_STRUCTURED_OUTPUT=json_schema`, 4 of 4 analyses passed schema validation; with the default `prompt` mode only 1 of 4 did, and the rest fell back safely ([release audit §12](docs/quality/release-readiness-audit.md#12-release-closure-sprint-2026-10-18)). For small local models, set `AI_STRUCTURED_OUTPUT=json_schema`. This proves the integration, **not** estimate quality: no model is evaluated or recommended until it passes the documented evaluation. See [environment configuration](docs/engineering/environment-configuration.md) and [AI architecture](docs/architecture/ai-architecture.md).
+**Verification status:** the adapter is tested against a local HTTP stub, and the fallback with the mock provider. One **integration smoke test with a real open-weight model** passed on 2026-10-18: Ollama 0.40.5 serving `qwen2.5:1.5b` locally, through the real UI. With `AI_STRUCTURED_OUTPUT=json_schema`, 4 of 4 analyses passed schema validation; with the default `prompt` mode only 1 of 4 did, and the rest fell back safely ([release audit §12](docs/quality/release-readiness-audit.md#12-release-closure-sprint-2026-10-18)). A repeat on 2026-10-19 called the AI service directly, without the UI, and passed 3 of 3 in each mode ([§13](docs/quality/release-readiness-audit.md#13-final-release-closure-2026-10-19)). Samples this small cannot tell which mode is more reliable, so for small local models set `AI_STRUCTURED_OUTPUT=json_schema`. This proves the integration, **not** estimate quality: no model is evaluated or recommended until it passes the documented evaluation. See [environment configuration](docs/engineering/environment-configuration.md) and [AI architecture](docs/architecture/ai-architecture.md).
 
 ## Testing
 

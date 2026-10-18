@@ -1,6 +1,6 @@
 # AI Architecture
 
-> **Status:** **Implemented in M3** ([ADR-0005](adr/0005-ai-provider-abstraction.md), [ADR-0018](adr/0018-m3-scope-guard-and-ai-implementation-choices.md) §8–12): the `none`, `mock` and `openai-compatible` adapters, prompt `cr-analysis@1`, schema `cr-analysis-output@1`, retries, repair, timeouts, rate limits, generation records, status and enablement. The `openai-compatible` adapter is tested against a local HTTP stub only; **no real endpoint has been called and no model has been evaluated**. The evaluation harness of §7 is **not built yet**. This document makes **no claims** about any model's quality, speed or cost.
+> **Status:** **Implemented in M3** ([ADR-0005](adr/0005-ai-provider-abstraction.md), [ADR-0018](adr/0018-m3-scope-guard-and-ai-implementation-choices.md) §8–12): the `none`, `mock` and `openai-compatible` adapters, prompt `cr-analysis@1`, schema `cr-analysis-output@1`, retries, repair, timeouts, rate limits, generation records, status and enablement. The `openai-compatible` adapter is tested automatically against a local HTTP stub. A real open-weight endpoint (Ollama, `qwen2.5:1.5b`, local) has been exercised manually as an **integration smoke test only**: through the UI on 2026-10-18 and through the AI service on 2026-10-19 ([release audit §12.4](../quality/release-readiness-audit.md#124-real-open-weight-ai-verification), [§13](../quality/release-readiness-audit.md#13-final-release-closure-2026-10-19)). **No model has been evaluated or is recommended**, and the evaluation harness of §7 (`npm run eval:ai`) is **not built yet**. This document makes **no claims** about any model's quality, speed or cost.
 >
 > **Mock scenarios** (tests and E2E only; `AI_PROVIDER=mock` is refused in production). A `[mock:<name>]` tag in the client text selects one of: `timeout`, `invalid-json`, `invalid-then-valid`, `schema-violation`, `unknown-keys`, `server-error`, `rate-limited`, `auth-failed`, `oversized`, `price-text`. Without a tag, the mock returns a valid suggestion.
 
@@ -110,7 +110,7 @@ No model is recommended until it passes this evaluation. Results go in `docs/qua
 - **Human rubric (1–4):** clarity, scope correctness, usefulness of assumptions and questions, and hallucination (invented facts). Two reviewers score each case.
 - **Acceptance threshold for a default recommendation:** ≥ 95% schema-valid after repair, zero state-changing behaviour on injection cases (guaranteed by design, verified anyway), and ≥ 70% of cases rated "useful with minor edits" or better (SC-6).
 - **Cost and latency:** record the measured cost per 100 analyses for hosted endpoints, using the provider's published pricing on the evaluation date, and the hardware used for self-hosted endpoints.
-- The harness `npm run eval:ai -- --provider openai-compatible` runs offline from CI because it needs a real endpoint.
+- *Planned (not built):* the harness `npm run eval:ai -- --provider openai-compatible` runs offline from CI because it needs a real endpoint.
 
 ## 8. Candidate models
 

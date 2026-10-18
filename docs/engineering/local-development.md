@@ -1,6 +1,11 @@
 # Local Development
 
-> **Status:** M1 (walking skeleton) is scaffolded. The test, build and E2E commands below were run on 2026-10-16 (Windows 11, Node 22.14.0). The Docker Compose database steps have **not** been verified yet, because the Docker daemon was not running on that machine. Report results in [implementation status](../quality/implementation-status.md#validation-log).
+> **Status:** M1–M5 are implemented. **Verified (Windows 11, Node 22.14.0):**
+>
+> - **2026-10-18:** the Docker Compose database steps (`docker compose up -d mongo`, then `npm run db:migrate`, then API tests and E2E on it), in release audit [§11](../quality/release-readiness-audit.md#11-checklist-audit-second-pass-2026-10-18) and §12.
+> - **2026-10-19:** a fresh `git clone` followed by `npm ci`, `npm run validate` and `npm run test:coverage`, in [§13](../quality/release-readiness-audit.md#13-final-release-closure-2026-10-19).
+>
+> **Not verified yet:** `npm run dev` with a manual browser walk-through, and runs on Linux or macOS. Report results in [implementation status](../quality/implementation-status.md#validation-log).
 
 ## Prerequisites
 
@@ -18,7 +23,7 @@ git clone <repo-url> soloops-ai && cd soloops-ai
 npm ci                                   # installs all workspaces from the single lockfile
 cp apps/api/.env.example apps/api/.env   # then set SESSION_SECRET (command in the file)
 cp apps/web/.env.example apps/web/.env.local
-docker compose up -d mongo               # mongod --replSet rs0, initialised by the health check (not yet verified)
+docker compose up -d mongo               # mongod --replSet rs0, initialised by the health check (verified 2026-10-18)
 npm run db:migrate                       # applies apps/api/migrations
 npm run dev                              # API on :4000 and web on :3000 in parallel
 ```

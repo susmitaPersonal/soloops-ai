@@ -40,7 +40,7 @@ Coverage is reported but **no percentage target is claimed** until a baseline ex
 | --- | --- |
 | `npm run lint` | ESLint + Prettier check |
 | `npm run typecheck` | `tsc --noEmit` across workspaces |
-| `npm test` | Unit + component + integration (starts an in-memory replica set, or uses `MONGODB_URI` from `docker compose up -d mongo`) |
+| `npm test` | Unit + component + integration (starts an in-memory replica set, or uses `MONGODB_URI_TEST` pointing at `docker compose up -d mongo`) |
 | `npm run test:e2e` | Playwright |
 | `npm run build` | Build all workspaces |
 | `npm run validate` | All of the above except E2E |

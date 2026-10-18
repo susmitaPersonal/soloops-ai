@@ -40,7 +40,7 @@ Production refuses to start if `COOKIE_SECURE` is not `true`, if `SESSION_SECRET
 - A missing `AI_BASE_URL` or `AI_MODEL` with `openai-compatible` counts as `unconfigured`. AI cannot be enabled, and analysis returns `409 AI_DISABLED`.
 - Retries cover network errors, 5xx and 429, at most `AI_MAX_RETRIES` times, with jittered back-off inside the `AI_TIMEOUT_MS` budget. Invalid credentials (401/403) and other 4xx errors are never retried. Invalid JSON or a schema violation gets exactly one repair attempt.
 - Verifying a real endpoint needs credentials and network access. The automated suite never calls one; it uses scripted providers, the `mock` adapter and a local HTTP stub.
-- **Small local models:** use `AI_STRUCTURED_OUTPUT=json_schema` if the runtime supports it (Ollama does). In the 2026-10-18 smoke test, `qwen2.5:1.5b` passed schema validation 4/4 times with `json_schema` and 1/4 with the default `prompt`. Validation is never loosened for a weaker model: failures fall back to manual entry.
+- **Small local models:** use `AI_STRUCTURED_OUTPUT=json_schema` if the runtime supports it (Ollama does). In the 2026-10-18 smoke test, `qwen2.5:1.5b` passed schema validation 4/4 times with `json_schema` and 1/4 with the default `prompt`. A 2026-10-19 repeat passed 3/3 in both modes. Samples this small do not settle which mode is more reliable. Validation is never loosened for a weaker model: failures fall back to manual entry.
 
 ## `apps/web`
 

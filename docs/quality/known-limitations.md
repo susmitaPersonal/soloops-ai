@@ -1,10 +1,14 @@
 # Known Limitations
 
-## Current state (2026-10-18, after M5)
+## Current state (2026-10-19, release closure)
+
+The current verification status, with evidence, is in [release readiness audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19).
 
 - **Milestones M1–M5 are implemented:** registration, sign-in/out, sessions, workspace isolation, workspace settings, clients, projects, requirements, scope baselines, tasks, change requests with hash-bound decisions, the approvals queue, advisory AI analysis, tasks from approved versions, billable work with server eligibility, the project overview (M4), and invoice drafts, owner issue with gapless numbers, void and print (M5). Member management (FR-004), the audit log UI (FR-016), the dashboard (FR-017) and Community features do not exist yet.
-- **No model has been evaluated** (ai-architecture §7). The `openai-compatible` adapter is verified against a local HTTP stub, plus one integration smoke test with a real open-weight model on 2026-10-18: Ollama `qwen2.5:1.5b`, 4/4 schema-valid with `AI_STRUCTURED_OUTPUT=json_schema` and 1/4 with `prompt` ([release audit §12](release-readiness-audit.md#12-release-closure-sprint-2026-10-18)). Its effort ranges varied widely between identical requests (10–40 h and 50–150 h), so estimate quality is unproven.
-- **CI has not run on GitHub** and **Docker Compose has not been started** on the maintainer machine (Docker daemon was down). Tests ran against `mongodb-memory-server` (real `mongod` 8.2.6).
+- **No model has been evaluated** (ai-architecture §7). The `openai-compatible` adapter is verified against a local HTTP stub, plus one integration smoke test with a real open-weight model on 2026-10-18: Ollama `qwen2.5:1.5b`, 4/4 schema-valid with `AI_STRUCTURED_OUTPUT=json_schema` and 1/4 with `prompt` ([release audit §12](release-readiness-audit.md#12-release-closure-sprint-2026-10-18)). Its effort ranges varied widely between identical requests (10–40 h and 50–150 h), so estimate quality is unproven. A repeat on 2026-10-19 called the AI service directly, without the UI, with the same model: 3/3 schema-valid in each mode. Identical requests again gave ranges from 10–30 h to 100–400 h ([release audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19)). The UI does not yet warn that estimates are unevaluated.
+- **CI has not run on GitHub.** The repository has no remote yet, so GitHub Actions has never run (P0, release audit §13).
+- **Docker Compose MongoDB** was verified on 2026-10-18 on the maintainer machine: 746 API tests and 33 E2E tests passed against it (release audit [§11](release-readiness-audit.md#11-checklist-audit-second-pass-2026-10-18), [§12.3](release-readiness-audit.md#123-commands-run-this-sprint-and-results)). It has not been repeated since and never on Linux: the CI `docker-mongodb` job will do that. Default test runs use `mongodb-memory-server` (a real `mongod`, no Docker).
+- **Not verified yet:** `npm run dev` with a browser walk-through by a person, a human fresh-clone trial, and Linux or macOS runs.
 
 ## Implementation limitations (M1)
 
@@ -16,11 +20,11 @@
 | `TRUST_PROXY=true` assumes exactly one reverse proxy that appends the client address to `X-Forwarded-For`. Other topologies need a code or configuration change | [environment configuration](../engineering/environment-configuration.md) |
 | Rotating `SESSION_SECRET` signs every user out (no multi-key support) | ADR-0016 §6 |
 | `next.config.ts` rewrites are fixed at build time: set `API_INTERNAL_URL` before `next build` if the API is not on `localhost:4000` | ADR-0016 Consequences |
-| No OpenAPI document yet | ADR-0016 §3, deferred again by ADR-0017 §12 (start of M3) |
+| No OpenAPI document. `api-design.md` and the Zod contracts are the API reference | [ADR-0021](../architecture/adr/0021-openapi-deferred-beyond-mvp.md) (deferred beyond the MVP release) |
 | No manual System/Light/Dark theme toggle yet: dark mode follows the system setting only | OQ-017 |
-| Navigation shows Home, Clients, Projects and Settings. Below 1024 px the sidebar becomes a wrapping top bar, not the specified focus-trapped drawer | Design system §7.3 (drawer not built in M2) |
+| Navigation shows Home, Approvals, Clients, Projects, Billing and Settings; there is no dashboard (FR-017). Below 1024 px the sidebar becomes a wrapping top bar, not the specified focus-trapped drawer | Design system §7.3 (drawer not built in M2) |
 | UI strings are not yet centralised for translation | NFR-013 (Should) |
-| Members management (FR-004), the AI section and the audit log (S-13) are not in Settings yet | FR-004, FR-054, FR-016 |
+| Members management (FR-004) and the audit log (S-13) are not in Settings yet. The AI section is (FR-053, FR-054) | FR-004, FR-016 |
 
 ## Implementation limitations (M2 Core Ops)
 
