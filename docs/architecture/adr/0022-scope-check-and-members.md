@@ -1,6 +1,6 @@
 # ADR-0022: Evidence-bound AI scope check and workspace members
 
-- **Status:** Accepted
+- **Status:** Accepted. The scope-check evidence rules (Decision §"Scope check" items 1–2) are superseded by [ADR-0023](0023-evidence-gated-scope-check.md); the members decision stands.
 - **Date:** 2026-10-19
 - **Related:** FR-004, FR-021, FR-022, BR-001–BR-003, BR-008, BR-011, BR-023, BR-026, BR-028, BR-031, ADR-0005, ADR-0006, ADR-0018, ADR-0021
 

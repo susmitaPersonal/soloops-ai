@@ -215,7 +215,7 @@ Automated in `apps/api/test/invoices.test.ts` (23 tests) and `src/modules/billin
 
 ## 2g. Members and the AI scope check (FR-004, FR-021, BR-031; release closure)
 
-Automated in `apps/api/test/members.test.ts` (10 tests), `apps/api/test/scope-check.test.ts` (7), `src/modules/ai/domain/output.test.ts` (scope and prompt cases), `src/modules/ai/eval/score.test.ts` (5), `src/modules/scope-guard/domain/version-rules.test.ts` (3 new); web `MembersSettings.test.tsx` (4) and `change-requests.test.tsx` (CT-SC-01–03, CT-SUM-03); E2E `principal-workflow.spec.ts` (E2E-WF-13) and `m3-scope-guard.spec.ts` (scope check in E2E-WF-04…07). Design: [ADR-0022](../architecture/adr/0022-scope-check-and-members.md).
+Automated in `apps/api/test/members.test.ts` (10 tests), `apps/api/test/scope-check.test.ts` (10), `src/modules/ai/domain/scope-gates.test.ts` (evidence gates, ADR-0023), `src/modules/ai/domain/output.test.ts` (parsing, mapping and prompt cases), `src/modules/ai/eval/score.test.ts` (9), `src/modules/scope-guard/domain/version-rules.test.ts` (3 new); web `MembersSettings.test.tsx` (4) and `change-requests.test.tsx` (CT-SC-01–03, CT-SUM-03); E2E `principal-workflow.spec.ts` (E2E-WF-13) and `m3-scope-guard.spec.ts` (scope check in E2E-WF-04…07). Design: [ADR-0022](../architecture/adr/0022-scope-check-and-members.md).
 
 | ID | Req | Lvl | Scenario / objective | Expected | Automated test | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -227,11 +227,20 @@ Automated in `apps/api/test/members.test.ts` (10 tests), `apps/api/test/scope-ch
 | TC-003.7–.8 | AC-003.4 | I | Remove the last owner; two owners remove each other at once | `409 INVALID_STATE_TRANSITION`; exactly one owner remains | `› TC-003.7`, `› TC-003.8` (10 repeated runs stable) | Pass |
 | TC-003.9 | SEC-004 | I | Unknown, foreign or malformed user ID | `404` | `› TC-003.9`; TC-SEC-01 member rows | Pass |
 | TC-003.10 | BR-023, AC-020.2 | I, E | A member added through the API drafts an invoice | Member issue/void → `403`, no number used; owner issues | `› TC-003.10`; E2E-WF-13 | Pass |
-| UT-SCOPE-01–08 | BR-031 | U | Server evidence rules | Supported verdicts kept; invented keys dropped; draft requirements → related; unsupported or contradictory → `UNCLEAR` with reasons | `output.test.ts` | Pass |
-| IT-SCOPE-01–03 | AC-009.7, BR-001 | I | Scope check through the API (scripted provider) | Evidence resolved to real requirements; invented → `UNCLEAR`; no approval, task or invoice created | `scope-check.test.ts` | Pass |
+| UT-SCOPE-08–09 | BR-031 | U | Mapping carries the server-checked scope | Verified mock quotes keep `CHANGES`; ask quotes are checked against the message passed in, not the model output | `output.test.ts` | Pass |
+| UT-GATE-01–03 | BR-031 | U | Server-decided verdict | Full verified proof → covered; a model verdict never decides (either way); no asks → `UNCLEAR` | `scope-gates.test.ts` | Pass |
+| UT-GATE-G1a–f | BR-031 | U | G1 quote verification (adversarial) | Fabricated quote, < 4 words, quote stitched across fields, quote of another requirement, invented key → discarded; case/whitespace/typographic normalisation accepted | `scope-gates.test.ts` | Pass |
+| UT-GATE-G2a–c | BR-031 | U | G2 agreed only | Verbatim draft quote → related; draft conflict ignored; no agreed requirements → `UNCLEAR` | `scope-gates.test.ts` | Pass |
+| UT-GATE-G3a–b | BR-031 | U | G3 ask grounding (adversarial) | Ask not in the message discarded; fake "requirement quote" written by the client never covers | `scope-gates.test.ts` | Pass |
+| UT-GATE-G4a–c | BR-031 | U | G4 nothing dropped | Covered ask hiding an uncovered remainder → not FULL; stop words ignored; 75% boundary exact | `scope-gates.test.ts` | Pass |
+| UT-GATE-G5a–b | BR-031 | U | G5 topic overlap (adversarial) | Real quote of an unrelated agreed requirement → related; plural forms match | `scope-gates.test.ts` | Pass |
+| UT-GATE-G6a–b, G7a–e | BR-031 | U | G6 conflicts, G7 full coverage | Conflicts → `UNCLEAR`; partial → `UNCLEAR` naming uncovered asks or `CHANGES` with verified change; none → new scope; `baselineSufficient` gates only "covered"; duplicates collapsed | `scope-gates.test.ts` | Pass |
+| UT-GATE-INV-01 | BR-031 | U | Invariant over 2,000 random answers | Every "already covered" rests on verbatim, agreed, single-field quotes for every ask, ≥ 75% message coverage, no change or conflict | `scope-gates.test.ts` | Pass |
+| IT-SCOPE-01–03, 07–10 | AC-009.7, BR-001, BR-031 | I | Scope check through the API (scripted provider, `cr-analysis@3`) | Verified proof → covered, recorded as `@3`; invented quote or key removed and covered refused; draft quote → related; client-written fake quote never covers; G4 through the API; default mock verified; nothing changes state | `scope-check.test.ts` | Pass |
 | IT-SCOPE-04–07 | AC-009.8, BR-006, BR-008, BR-026 | I | Confirmed verdict and questions | Saved, hashed when set, immutable after propose, on the summary; pre-0006 versions keep their hash; zero effort → no estimate or cost | `scope-check.test.ts`; UT-HASH-SC-01/02 | Pass |
-| CT-SC-01–03, CT-SUM-03 | AC-009.7–.8 | C | Scope check UI and summary | Verdict in words with evidence; downgrade explained; applied verdict editable with provenance; plain-language verdict and questions for the client | `change-requests.test.tsx` | Pass |
+| CT-SC-01–03, CT-SUM-03 | AC-009.7–.8 | C | Scope check UI and summary | Verdict, coverage and per-ask proof in words ("Covered by REQ-2 …: '…'", "Not in the agreed scope"); downgrade explained; applied verdict editable with provenance; plain-language verdict and questions for the client | `change-requests.test.tsx` | Pass |
 | UT-EVAL-01–05 | ai-architecture §7 | U | Evaluation dataset and scoring | ≥ 20 cases in every category; pre-registered thresholds; metrics computed correctly | `score.test.ts` | Pass |
+| UT-EVAL-06–09 | ai-architecture §7, BR-031 | U | Held-out dataset; T4 and "covered" recall | `scope-check@2` valid in every category; false "already covered" counted over non-covered cases with the model-alone rate beside it; recall counts failed runs as misses; no division by zero | `score.test.ts` | Pass |
 | EVAL-SCOPE | ai-architecture §7 | Manual (real model) | 23 cases × 3 runs against the local model | Every threshold met | `npm run eval:ai`; [results](ai-evaluation-results.md) | **Fail** for `qwen2.5:1.5b` (T3 accuracy 0.30) |
 
 ## 3. Workspace isolation and authorisation (SEC-004, SEC-011)

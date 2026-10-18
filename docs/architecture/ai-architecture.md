@@ -1,6 +1,6 @@
 # AI Architecture
 
-> **Status:** **Implemented in M3** ([ADR-0005](adr/0005-ai-provider-abstraction.md), [ADR-0018](adr/0018-m3-scope-guard-and-ai-implementation-choices.md) §8–12): the `none`, `mock` and `openai-compatible` adapters, prompt `cr-analysis@1`, schema `cr-analysis-output@1` (current: `cr-analysis@2` / `cr-analysis-output@2` with the evidence-bound scope check, [ADR-0022](adr/0022-scope-check-and-members.md)), retries, repair, timeouts, rate limits, generation records, status and enablement. The `openai-compatible` adapter is tested automatically against a local HTTP stub. A real open-weight endpoint (Ollama, `qwen2.5:1.5b`, local) has been exercised manually: an integration smoke test through the UI on 2026-10-18 and through the AI service on 2026-10-19, and the scope-check **evaluation** on 2026-10-19 ([results](../quality/ai-evaluation-results.md): it fails the accuracy threshold) ([release audit §12.4](../quality/release-readiness-audit.md#124-real-open-weight-ai-verification), [§13](../quality/release-readiness-audit.md#13-final-release-closure-2026-10-19)). **No model is recommended.** The scope-check part of the §7 harness is built (`npm run eval:ai`); the human rubric is not. This document makes **no claims** about any model's quality, speed or cost.
+> **Status:** **Implemented in M3** ([ADR-0005](adr/0005-ai-provider-abstraction.md), [ADR-0018](adr/0018-m3-scope-guard-and-ai-implementation-choices.md) §8–12): the `none`, `mock` and `openai-compatible` adapters, prompt `cr-analysis@1`, schema `cr-analysis-output@1` (then `@2` with the scope check of [ADR-0022](adr/0022-scope-check-and-members.md); current: `cr-analysis@3` / `cr-analysis-output@3`, where the server decides coverage from verbatim quotes, [ADR-0023](adr/0023-evidence-gated-scope-check.md)), retries, repair, timeouts, rate limits, generation records, status and enablement. The `openai-compatible` adapter is tested automatically against a local HTTP stub. A real open-weight endpoint (Ollama, `qwen2.5:1.5b`, local) has been exercised manually: an integration smoke test through the UI on 2026-10-18 and through the AI service on 2026-10-19, and the scope-check **evaluation** on 2026-10-19 ([results](../quality/ai-evaluation-results.md): it fails the accuracy threshold) ([release audit §12.4](../quality/release-readiness-audit.md#124-real-open-weight-ai-verification), [§13](../quality/release-readiness-audit.md#13-final-release-closure-2026-10-19)). **No model is recommended.** The scope-check part of the §7 harness is built (`npm run eval:ai`); the human rubric is not. This document makes **no claims** about any model's quality, speed or cost.
 >
 > **Mock scenarios** (tests and E2E only; `AI_PROVIDER=mock` is refused in production). A `[mock:<name>]` tag in the client text selects one of: `timeout`, `invalid-json`, `invalid-then-valid`, `schema-violation`, `unknown-keys`, `server-error`, `rate-limited`, `auth-failed`, `oversized`, `price-text`. Without a tag, the mock returns a valid suggestion.
 
@@ -73,7 +73,7 @@ New adapters (for example a native SDK for a specific open-model host) implement
 
 Unknown properties are stripped. Any price-like text is ignored, because the schema has no money fields.
 
-**`cr-analysis-output@2`** (prompt `cr-analysis@2`, current; [ADR-0022](adr/0022-scope-check-and-members.md)) is `@1` plus:
+**`cr-analysis-output@2`** (prompt `cr-analysis@2`; kept for existing generation records; [ADR-0022](adr/0022-scope-check-and-members.md)) is `@1` plus:
 
 | Field | Type and bounds |
 | --- | --- |
@@ -81,7 +81,37 @@ Unknown properties are stripped. Any price-like text is ignored, because the sch
 | `questionsForClient` | string[] ≤ 10, most important first |
 | `scopeAssessment` | `verdict` (`NEW_SCOPE`, `CHANGES_AGREED_SCOPE`, `LIKELY_ALREADY_COVERED` or `UNCLEAR`), `rationale` ≤ 600, `baselineSufficient` boolean, `evidence` ≤ 10 items of `requirementKey`, `relation` (`COVERS`, `CHANGES` or `RELATED`) and `explanation` ≤ 300 |
 
-The prompt marks each requirement `[agreed]` (baselined) or `[draft]`. **The server decides what is shown** (`assessScope`, pure, unit-tested, BR-031): evidence with an unknown key is dropped; `COVERS`/`CHANGES` on a requirement that is not agreed becomes `RELATED`; with no agreed requirement, or `baselineSufficient: false`, the verdict is `UNCLEAR`; "already covered" needs `COVERS` and no `CHANGES`; "changes agreed scope" needs `CHANGES`; "new scope" must not cite `COVERS`/`CHANGES`. Any other verdict becomes `UNCLEAR`, and `adjustments` explains why; the model's own verdict is returned as `modelVerdict`. The person then confirms the verdict, which is saved on the version and bound by its hash.
+Under `@2`, the server kept the model's verdict when the cited keys existed and were agreed. Run 4 showed that this cannot detect a confident but wrong "already covered" ([results](../quality/ai-evaluation-results.md#run-4-qwen257b-compared-with-qwen2515b)), so `@3` replaced it.
+
+**`cr-analysis-output@3`** (prompt `cr-analysis@3`, **current**; [ADR-0023](adr/0023-evidence-gated-scope-check.md)) is `@2` with a new `scopeAssessment`:
+
+| Field | Type and bounds |
+| --- | --- |
+| `scopeAssessment` | `verdict` (reported only, as `modelVerdict`), `rationale` ≤ 600, `baselineSufficient` boolean, `asks` ≤ 10 items of `quote` ≤ 500 (verbatim from the client message) and `citations` ≤ 10 items of `requirementKey`, `relation` (`COVERS`, `CHANGES`, `CONFLICTS` or `RELATED`) and `quote` ≤ 500 (verbatim from that requirement's title, description or one acceptance criterion) |
+
+The prompt lists each requirement as `[agreed]` (baselined) or `[draft]`, with its title, description and acceptance criteria one per line, so quotes come from a single field.
+
+**The server decides coverage and the verdict** (`assessScope` in `apps/api/src/modules/ai/domain/scope-gates.ts`, pure, BR-031). It applies these gates:
+- **G1:** a requirement quote must occur verbatim (case- and whitespace-normalised) in one field of that requirement and have ≥ 4 words; otherwise it is discarded.
+- **G2:** a requirement that is not agreed becomes `RELATED`.
+- **G3:** an ask quote must occur in the message the model saw; otherwise the ask is discarded.
+- **G4:** asks must quote ≥ 75% of the message's content words; otherwise coverage cannot be FULL.
+- **G5:** a `COVERS` quote must share a content word with its ask; otherwise it becomes `RELATED`.
+- **G6:** `CONFLICTS`, or `COVERS` and `CHANGES` from two agreed requirements on one ask, makes the coverage CONFLICT.
+- **G7:** FULL only when every ask is covered.
+
+Coverage FULL gives `LIKELY_ALREADY_COVERED`, but only if `baselineSufficient` is true (the asymmetric policy). The other outcomes:
+- PARTIAL gives `CHANGES_AGREED_SCOPE` with a verified change, otherwise `UNCLEAR`, naming the uncovered asks.
+- NONE gives `NEW_SCOPE`.
+- CONFLICT, no agreed requirements, or no grounded ask gives `UNCLEAR`.
+
+`suggestion.scope` returns:
+- `verdict` and `modelVerdict`;
+- `coverage` and `messageCoverage`;
+- `asks`, with their status and verified citations;
+- `adjustments`, which explains every discard and downgrade.
+
+The person then confirms the verdict, which is saved on the version and bound by its hash. The [ADR](adr/0023-evidence-gated-scope-check.md#guarantees) lists exactly which guarantees are deterministic and which remain model judgment.
 
 **Post-validation mapping:**
 1. Drop `affectedRequirementKeys` not present in the project and emit a warning (ERR-003).
@@ -107,7 +137,7 @@ The prompt marks each requirement `[agreed]` (baselined) or `[draft]`. **The ser
 | Status probes | `GET /ai/status` probes the provider with a 3 s timeout and caches the answer for 30 s per API process (shared by concurrent callers), so an unreachable endpoint does not slow every page load ([ADR-0020](adr/0020-m5-invoice-implementation-choices.md) §10). |
 | Rate limits | Per workspace (see [API design](api-design.md#5-rate-limits-initial-values-tune-after-measurement)) and one concurrent analysis per version. |
 | Fallback | On any failure the draft is unchanged, a generation is recorded with a failure status, and the UI shows manual-entry guidance (FR-051). |
-| Data minimisation | Only CR text, project name and description, and requirement keys, titles and short descriptions are sent. Client contact details, rates and invoices are never sent (SEC-008). |
+| Data minimisation | Only CR text, project name and description, and requirement keys, titles, short descriptions, acceptance criteria and agreed/draft status are sent (acceptance criteria since `cr-analysis@3`, disclosed under FR-054). Client contact details, rates and invoices are never sent (SEC-008). |
 | Retention | Validated output and metadata are stored. Prompts are stored only if `AI_STORE_PROMPTS=true`. The provider's own retention is outside SoloOps' control and is disclosed on enablement (FR-054, PRV-003). |
 | Secrets | `AI_API_KEY` is read from the environment, sent only in the `Authorization` header to `AI_BASE_URL`, and never logged. |
 
@@ -120,7 +150,7 @@ No model is recommended until it passes this evaluation. **Results:** [AI evalua
 - **Human rubric (1–4):** clarity, scope correctness, usefulness of assumptions and questions, and hallucination (invented facts). Two reviewers score each case.
 - **Acceptance threshold for a default recommendation:** ≥ 95% schema-valid after repair, zero state-changing behaviour on injection cases (guaranteed by design, verified anyway), and ≥ 70% of cases rated "useful with minor edits" or better (SC-6).
 - **Cost and latency:** record the measured cost per 100 analyses for hosted endpoints, using the provider's published pricing on the evaluation date, and the hardware used for self-hosted endpoints.
-- **Built for the scope check:** `npm run eval:ai -w @soloops/api` (`apps/api/src/eval-ai.ts`) runs the real AI service against the configured endpoint, 3 times per case, and scores the results against the thresholds in `apps/api/src/modules/ai/eval/score.ts` (fixed before the first run). Dataset: `apps/api/src/modules/ai/eval/scope-cases.json` (23 cases). Offline from CI because it needs a real endpoint. The human rubric for proposal text is **not** built yet.
+- **Built for the scope check:** `npm run eval:ai -w @soloops/api` (`apps/api/src/eval-ai.ts`) runs the real AI service against the configured endpoint, 3 times per case, and scores the results against the thresholds in `apps/api/src/modules/ai/eval/score.ts` (fixed before the first run). Datasets: `apps/api/src/modules/ai/eval/scope-cases.json` (`scope-check@1`, 23-case regression set) and `scope-cases-heldout.json` (`scope-check@2`, 32 held-out cases written blind to the gates, committed before them); choose with `EVAL_DATASET=regression|heldout`. The score reports false "already covered" (T4) with counts and the model-alone rate, separately from accuracy (T3), plus "covered" recall. Offline from CI because it needs a real endpoint. The human rubric for proposal text is **not** built yet.
 
 ## 8. Candidate models
 

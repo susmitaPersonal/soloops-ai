@@ -22,7 +22,7 @@ Chain: **Requirement → User story → Acceptance criteria → Design/module �
 | FR-016 | S | US-014 | AC-014.1 | audit | `{ws}/audit-events` · S-13 | TC-014.1 | Planned |
 | FR-017 | S | US-026 | AC-026.1–.4 | dashboard | `GET {ws}/dashboard` · S-14 | TC-026.1–.4 | Planned |
 | FR-020 | M | US-008 | AC-008.1–.2 | scope-guard | `…/change-requests` · S-06 | TC-008.1–.2 | Done (M3) |
-| FR-021 | M | US-009 | AC-009.1, .3, .5–.8 | scope-guard, ai | `…/versions/{n}/analyze` · S-07 | TC-009.1, .3, .5, .6, TC-AI-01–05, UT-SCOPE-01–08, IT-SCOPE-01–07 (`scope-check.test.ts`), CT-SC-01–03, CT-SUM-03, UT-HASH-SC-01/02, E2E-WF-04…07 (scope check) | Done (M3; scope check added at release closure, ADR-0022). Real models evaluated 2026-10-19: `qwen2.5:1.5b` fails accuracy; `qwen2.5:7b` fails accuracy and the costly-error threshold ([AI evaluation results](ai-evaluation-results.md)) |
+| FR-021 | M | US-009 | AC-009.1, .3, .5–.8 | scope-guard, ai | `…/versions/{n}/analyze` · S-07 | TC-009.1, .3, .5, .6, TC-AI-01–05, UT-SCOPE-08–09, UT-GATE-* (`scope-gates.test.ts`), IT-SCOPE-01–10 (`scope-check.test.ts`), CT-SC-01–03, CT-SUM-03, UT-HASH-SC-01/02, E2E-WF-04…07 (scope check) | Done (M3; scope check added at release closure, ADR-0022; evidence-gated, server-decided coverage, ADR-0023). Real models evaluated 2026-10-19: `qwen2.5:1.5b` fails accuracy; `qwen2.5:7b` fails accuracy and the costly-error threshold ([AI evaluation results](ai-evaluation-results.md)) |
 | FR-022 | M | US-009, US-010 | AC-009.2 | scope-guard | `PATCH …/versions/{n}` · S-07 | TC-009.2 | Done (M3) |
 | FR-023 | M | US-010 | AC-010.1–.3 | scope-guard | propose · S-07 | TC-010.1–.3 | Done (M3) |
 | FR-024 | M | US-011 | AC-011.1–.2 | scope-guard | `…/propose` · S-07 | TC-011.1–.2, TC-BR-008 | Done (M3) |
@@ -157,7 +157,7 @@ Detailed cases are in [test cases](test-cases.md). Result is from the final run 
 | BR-028 | TC-BR-028, TC-BR-028.baseline/.req/.task/.project, CR transitions (M3), `cr.tasks.created` (M4), `invoice.created/issued/voided` (M5) |
 | BR-029 | TC-004.3, TC-005.2, TC-005.R, TC-BR-029.1–.6 (Pass); TC-008.2 (Pass, `scope-guard-lifecycle.test.ts`); entries: `delivery-billing.test.ts` BR-029 (Pass) |
 | BR-030 | TC-BR-030 (entries on any invoice line cannot be deleted; no delete paths for decisions or issued invoices) |
-| BR-031 | UT-SCOPE-01–07 (`output.test.ts`), IT-SCOPE-01–03 (`scope-check.test.ts`), CT-SC-02, UT-HASH-SC-01/02 (Pass) |
+| BR-031 | UT-GATE-01–03, G1–G7, INV-01 (`scope-gates.test.ts`), UT-SCOPE-08–09 (`output.test.ts`), IT-SCOPE-01–03, 07–10 (`scope-check.test.ts`), UT-EVAL-06–09 (`score.test.ts`), CT-SC-01–03, UT-HASH-SC-01/02 (Pass) |
 
 ## Non-functional, security, privacy, accessibility → verification
 
