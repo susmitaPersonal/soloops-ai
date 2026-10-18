@@ -6,14 +6,15 @@
 Client → Project → Requirement → Change Request → Approval → Task → Billable Work → Invoice Draft
 ```
 
-> **Project status: M1–M5 implemented; release candidate.** Published on GitHub; both CI jobs passed on `def722b` ([run](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746)). One manual check is still open: the development server and browser run ([release audit §13](docs/quality/release-readiness-audit.md#13-final-release-closure-2026-10-19)). Registration, sign-in, sessions, workspace isolation, billing settings, clients, projects, requirements, scope baselines, tasks, **change requests with immutable hash-bound versions, recorded client decisions, advisory AI analysis** (OpenAI-compatible endpoint or none), **tasks from approved change requests, billable work with server-side eligibility, and invoice drafts with owner-only issue, gapless numbers, void and print** work and are tested. Invoices are drafts with a single tax rate, not GST-compliant tax invoices. Member management is not implemented yet. No AI model has been evaluated or is recommended. See [implementation status](docs/quality/implementation-status.md) and the [roadmap](docs/product/roadmap.md). Built for Hacktoberfest 2026, Week 2.
+> **Project status: release candidate.** M1–M5 plus **workspace members** (FR-004) and the **AI scope check** (FR-021) are implemented and pass the full local test suite. The repository is published and CI passed on `def722b`, which **predates** the scope check and members; that newer work is not yet pushed or CI-verified. Still open: a manual development-server and browser run ([release audit §14](docs/quality/release-readiness-audit.md#14-theme-alignment-ai-scope-check-and-members-2026-10-19)). Working and tested: registration, sign-in, sessions, workspace isolation, members, billing settings, clients, projects, requirements, scope baselines, tasks, **change requests with immutable hash-bound versions, an evidence-bound AI scope check, recorded client decisions**, **tasks from approved change requests, billable work with server-side eligibility, and invoice drafts with owner-only issue, gapless numbers, void and print**. Invoices are drafts with a single tax rate, not GST-compliant tax invoices. The AI scope check was evaluated with one small local model and **failed** its accuracy threshold, so no model is recommended ([results](docs/quality/ai-evaluation-results.md)). See [implementation status](docs/quality/implementation-status.md) and the [roadmap](docs/product/roadmap.md). Built for Hacktoberfest 2026, Week 2.
 
 ## Why
 
 Freelancers get extra requests over chat and calls, say yes, and later can't prove what was agreed or remember what to bill. SoloOps AI:
 
 - **Baselines** the original scope.
-- Turns each extra ask into a **versioned proposal**, which AI can help draft from the client's raw message.
+- **Checks each extra ask against the agreed requirements** with an open-weight model: new scope, a change to agreed scope, already covered, or unclear. It shows the evidence and the questions to ask the client. The app keeps only verdicts that real, agreed requirements support, and you confirm the verdict.
+- Turns the ask into a **versioned proposal**, which the AI helps draft from the client's raw message.
 - Records the **client's decision against an exact, hashed version**.
 - Only lets **approved** work become tasks and invoice lines.
 - Computes invoice totals **deterministically**. AI never approves, prices or invoices anything.
@@ -49,9 +50,13 @@ If port 27017 is already used by another MongoDB, see [troubleshooting](docs/eng
 
 AI is **optional and off by default** (`AI_PROVIDER=none`). To use it, point `AI_PROVIDER=openai-compatible` at any OpenAI-compatible endpoint that serves an open-weight model (`AI_BASE_URL`, `AI_MODEL`, and `AI_API_KEY` only if the endpoint needs one), then an owner turns AI on in Settings. `AI_PROVIDER=mock` gives deterministic test answers and is refused in production.
 
-AI only **suggests** change-request details and an effort range. People confirm the effort, prices are computed by the server, and only a recorded client decision approves anything. If the AI times out, fails or returns invalid output, the draft stays unchanged and the user continues manually.
+AI only **suggests**: a scope verdict with evidence, change-request details, questions for the client and an uncertain effort range. People confirm the verdict and the effort, prices are computed by the server, and only a recorded client decision approves anything. A verdict whose evidence does not hold up (an invented requirement, one that is not agreed, or contradictory citations) is shown as **Unclear**, with the reason. If the AI times out, fails or returns invalid output, the draft stays unchanged and the user continues manually.
 
-**Verification status:** the adapter is tested against a local HTTP stub, and the fallback with the mock provider. One **integration smoke test with a real open-weight model** passed on 2026-10-18: Ollama 0.40.5 serving `qwen2.5:1.5b` locally, through the real UI. With `AI_STRUCTURED_OUTPUT=json_schema`, 4 of 4 analyses passed schema validation; with the default `prompt` mode only 1 of 4 did, and the rest fell back safely ([release audit §12](docs/quality/release-readiness-audit.md#12-release-closure-sprint-2026-10-18)). A repeat on 2026-10-19 called the AI service directly, without the UI, and passed 3 of 3 in each mode ([§13](docs/quality/release-readiness-audit.md#13-final-release-closure-2026-10-19)). Samples this small cannot tell which mode is more reliable, so for small local models set `AI_STRUCTURED_OUTPUT=json_schema`. This proves the integration, **not** estimate quality: no model is evaluated or recommended until it passes the documented evaluation. See [environment configuration](docs/engineering/environment-configuration.md) and [AI architecture](docs/architecture/ai-architecture.md).
+**Verification status:** the adapter is tested against a local HTTP stub, and the fallback with the mock provider. With a real open-weight model, **Ollama 0.40.5 serving `qwen2.5:1.5b` locally** (inference on the same machine; no external AI API), the AI service and UI ran end to end on 2026-10-18 and 2026-10-19. The scope check was then **evaluated** on 23 synthetic cases × 3 runs against thresholds fixed in advance ([results](docs/quality/ai-evaluation-results.md)):
+  - It **passed** schema validity (100%), invented references (3%), agreement across runs (87%), and **0% wrong "already covered"** verdicts, the costly mistake.
+  - It **failed** verdict accuracy: 30% against a 70% threshold. Most verdicts end as Unclear because this small model's evidence contradicts its own verdicts.
+
+  The integration is proven and the safety rules held; **this model's scope verdicts are not accurate, and no model is recommended**. Use `AI_STRUCTURED_OUTPUT=json_schema` for small local models. Re-run `npm run eval:ai` for any other model. See [environment configuration](docs/engineering/environment-configuration.md) and [AI architecture](docs/architecture/ai-architecture.md).
 
 ## Testing
 
@@ -65,9 +70,9 @@ npm run test:e2e     # Playwright, after npm run build
 ## Current limitations
 
 - Invoices are **drafts with one tax rate**, not GST-compliant tax invoices. There are no payments, credit notes or e-invoicing.
-- One owner per workspace in practice: member management (FR-004) is not built yet.
+- Teams: owners add people who already have an account as members. There are no invitations, role changes or ownership transfer, and only owners issue or void invoices.
 - Client approvals are recorded by the freelancer (with evidence and a content hash), not signed by the client.
-- AI estimates are unevaluated: one small local model passed an integration smoke test only (see above).
+- AI scope verdicts are **not accurate** with the only evaluated model (`qwen2.5:1.5b`: 30% against a 70% threshold), and effort estimates are unevaluated. The app shows Unclear rather than a wrong verdict, and a person always decides.
 
 Full list: [known limitations](docs/quality/known-limitations.md). Release status: [release readiness audit](docs/quality/release-readiness-audit.md).
 

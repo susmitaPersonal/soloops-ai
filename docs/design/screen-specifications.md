@@ -1,6 +1,6 @@
 # Screen Specifications
 
-> **Status:** Screens for M1–M5 are built (`apps/web`); deviations are listed in [known limitations](../quality/known-limitations.md). Screens for unbuilt requirements (S-13 audit log, S-14 dashboard, members) are planned. Visual tokens and components come from the [UI/UX design system](ui-ux-design-system.md). Routes follow [frontend architecture](../architecture/frontend-architecture.md#structure). Behaviour rules come from [business rules](../product/business-rules.md) and the [change-request lifecycle](../design/change-request-lifecycle.md). Wireframes are textual so any contributor can implement them with the design-system components.
+> **Status:** Screens for M1–M5 are built (`apps/web`); deviations are listed in [known limitations](../quality/known-limitations.md). S-12 members (FR-004) and the S-07 scope check (FR-021) were added at release closure (ADR-0022). Screens for unbuilt requirements (S-13 audit log, S-14 dashboard) are planned. Visual tokens and components come from the [UI/UX design system](ui-ux-design-system.md). Routes follow [frontend architecture](../architecture/frontend-architecture.md#structure). Behaviour rules come from [business rules](../product/business-rules.md) and the [change-request lifecycle](../design/change-request-lifecycle.md). Wireframes are textual so any contributor can implement them with the design-system components.
 
 ## 1. Information architecture
 

@@ -1,6 +1,6 @@
 # AI Architecture
 
-> **Status:** **Implemented in M3** ([ADR-0005](adr/0005-ai-provider-abstraction.md), [ADR-0018](adr/0018-m3-scope-guard-and-ai-implementation-choices.md) §8–12): the `none`, `mock` and `openai-compatible` adapters, prompt `cr-analysis@1`, schema `cr-analysis-output@1`, retries, repair, timeouts, rate limits, generation records, status and enablement. The `openai-compatible` adapter is tested automatically against a local HTTP stub. A real open-weight endpoint (Ollama, `qwen2.5:1.5b`, local) has been exercised manually as an **integration smoke test only**: through the UI on 2026-10-18 and through the AI service on 2026-10-19 ([release audit §12.4](../quality/release-readiness-audit.md#124-real-open-weight-ai-verification), [§13](../quality/release-readiness-audit.md#13-final-release-closure-2026-10-19)). **No model has been evaluated or is recommended**, and the evaluation harness of §7 (`npm run eval:ai`) is **not built yet**. This document makes **no claims** about any model's quality, speed or cost.
+> **Status:** **Implemented in M3** ([ADR-0005](adr/0005-ai-provider-abstraction.md), [ADR-0018](adr/0018-m3-scope-guard-and-ai-implementation-choices.md) §8–12): the `none`, `mock` and `openai-compatible` adapters, prompt `cr-analysis@1`, schema `cr-analysis-output@1` (current: `cr-analysis@2` / `cr-analysis-output@2` with the evidence-bound scope check, [ADR-0022](adr/0022-scope-check-and-members.md)), retries, repair, timeouts, rate limits, generation records, status and enablement. The `openai-compatible` adapter is tested automatically against a local HTTP stub. A real open-weight endpoint (Ollama, `qwen2.5:1.5b`, local) has been exercised manually: an integration smoke test through the UI on 2026-10-18 and through the AI service on 2026-10-19, and the scope-check **evaluation** on 2026-10-19 ([results](../quality/ai-evaluation-results.md): it fails the accuracy threshold) ([release audit §12.4](../quality/release-readiness-audit.md#124-real-open-weight-ai-verification), [§13](../quality/release-readiness-audit.md#13-final-release-closure-2026-10-19)). **No model is recommended.** The scope-check part of the §7 harness is built (`npm run eval:ai`); the human rubric is not. This document makes **no claims** about any model's quality, speed or cost.
 >
 > **Mock scenarios** (tests and E2E only; `AI_PROVIDER=mock` is refused in production). A `[mock:<name>]` tag in the client text selects one of: `timeout`, `invalid-json`, `invalid-then-valid`, `schema-violation`, `unknown-keys`, `server-error`, `rate-limited`, `auth-failed`, `oversized`, `price-text`. Without a tag, the mock returns a valid suggestion.
 
@@ -73,6 +73,16 @@ New adapters (for example a native SDK for a specific open-model host) implement
 
 Unknown properties are stripped. Any price-like text is ignored, because the schema has no money fields.
 
+**`cr-analysis-output@2`** (prompt `cr-analysis@2`, current; [ADR-0022](adr/0022-scope-check-and-members.md)) is `@1` plus:
+
+| Field | Type and bounds |
+| --- | --- |
+| `effortHours` | as `@1` but 0 ≤ low ≤ likely ≤ high: **extra** effort; `high = 0` maps to **no** estimate (never a zero range, BR-026) and no indicative cost |
+| `questionsForClient` | string[] ≤ 10, most important first |
+| `scopeAssessment` | `verdict` (`NEW_SCOPE`, `CHANGES_AGREED_SCOPE`, `LIKELY_ALREADY_COVERED` or `UNCLEAR`), `rationale` ≤ 600, `baselineSufficient` boolean, `evidence` ≤ 10 items of `requirementKey`, `relation` (`COVERS`, `CHANGES` or `RELATED`) and `explanation` ≤ 300 |
+
+The prompt marks each requirement `[agreed]` (baselined) or `[draft]`. **The server decides what is shown** (`assessScope`, pure, unit-tested, BR-031): evidence with an unknown key is dropped; `COVERS`/`CHANGES` on a requirement that is not agreed becomes `RELATED`; with no agreed requirement, or `baselineSufficient: false`, the verdict is `UNCLEAR`; "already covered" needs `COVERS` and no `CHANGES`; "changes agreed scope" needs `CHANGES`; "new scope" must not cite `COVERS`/`CHANGES`. Any other verdict becomes `UNCLEAR`, and `adjustments` explains why; the model's own verdict is returned as `modelVerdict`. The person then confirms the verdict, which is saved on the version and bound by its hash.
+
 **Post-validation mapping:**
 1. Drop `affectedRequirementKeys` not present in the project and emit a warning (ERR-003).
 2. Convert hours to minutes, rounded to the nearest minute.
@@ -103,14 +113,14 @@ Unknown properties are stripped. Any price-like text is ignored, because the sch
 
 ## 7. Evaluation
 
-No model is recommended until it passes this evaluation. Results go in `docs/quality/ai-evaluation-results.md` (to be created when the first run happens). The 2026-10-18 Ollama `qwen2.5:1.5b` run in the [release audit §12](../quality/release-readiness-audit.md#12-release-closure-sprint-2026-10-18) is an **integration smoke test** (8 requests, one prompt), not an evaluation.
+No model is recommended until it passes this evaluation. **Results:** [AI evaluation results](../quality/ai-evaluation-results.md) — the scope check was evaluated on 2026-10-19 with `qwen2.5:1.5b`, which **fails** the verdict-accuracy threshold. The 2026-10-18 Ollama `qwen2.5:1.5b` run in the [release audit §12](../quality/release-readiness-audit.md#12-release-closure-sprint-2026-10-18) is an **integration smoke test** (8 requests, one prompt), not an evaluation.
 
 - **Dataset:** ≥ 20 synthetic or anonymised change requests across web, mobile and integration work, including vague, multi-part, off-topic and injection-containing requests, each with a project requirement list. It is stored in `apps/api/src/modules/ai/eval/cases/` and contains no real client data.
 - **Automatic metrics:** schema-valid rate (first try and after repair), unknown-key rate, effort range sanity (low ≤ likely ≤ high), latency p50/p95, and tokens per request.
 - **Human rubric (1–4):** clarity, scope correctness, usefulness of assumptions and questions, and hallucination (invented facts). Two reviewers score each case.
 - **Acceptance threshold for a default recommendation:** ≥ 95% schema-valid after repair, zero state-changing behaviour on injection cases (guaranteed by design, verified anyway), and ≥ 70% of cases rated "useful with minor edits" or better (SC-6).
 - **Cost and latency:** record the measured cost per 100 analyses for hosted endpoints, using the provider's published pricing on the evaluation date, and the hardware used for self-hosted endpoints.
-- *Planned (not built):* the harness `npm run eval:ai -- --provider openai-compatible` runs offline from CI because it needs a real endpoint.
+- **Built for the scope check:** `npm run eval:ai -w @soloops/api` (`apps/api/src/eval-ai.ts`) runs the real AI service against the configured endpoint, 3 times per case, and scores the results against the thresholds in `apps/api/src/modules/ai/eval/score.ts` (fixed before the first run). Dataset: `apps/api/src/modules/ai/eval/scope-cases.json` (23 cases). Offline from CI because it needs a real endpoint. The human rubric for proposal text is **not** built yet.
 
 ## 8. Candidate models
 

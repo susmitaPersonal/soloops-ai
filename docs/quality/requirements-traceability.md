@@ -11,7 +11,7 @@ Chain: **Requirement → User story → Acceptance criteria → Design/module �
 | FR-001 | M | US-001 | AC-001.1–.2 | identity | `POST /auth/register` · S-01 | TC-001.1–.2 | Done |
 | FR-002 | M | US-001 | AC-001.3–.4 | identity | `POST /auth/login`, `/logout`, `GET /auth/me` · S-01 | TC-001.3–.4, TC-SEC-05 | Done |
 | FR-003 | M | US-001 | AC-001.1 | workspace | `POST /auth/register` | TC-001.1 | Done |
-| FR-004 | S | US-003 | AC-003.1–.2 | workspace | `{ws}/members` · S-12 | TC-003.1–.2 | Planned |
+| FR-004 | S | US-003 | AC-003.1–.4 | workspace, identity (ports) | `{ws}/members` · S-12 | TC-003.1–.10 (`members.test.ts`), CT-MEM-01–04 (`MembersSettings.test.tsx`), TC-SEC-01/02/03 member rows (`security.test.ts`), E2E-WF-13 (`principal-workflow.spec.ts`) | Done (release closure, [ADR-0022](../architecture/adr/0022-scope-check-and-members.md)) |
 | FR-005 | M | US-002 | AC-002.1–.3 | workspace | `PATCH {ws}` · S-12 | TC-002.1–.3, TC-002.1d, TC-019.1 | Done (M5: invoice drafts take the workspace tax label and rate) |
 | FR-010 | M | US-004 | AC-004.1–.3 | core-ops | `{ws}/clients` · S-02 | TC-004.1–.3, TC-004.V, TC-004.E, TC-004.P | Done (M2) |
 | FR-011 | M | US-005 | AC-005.1–.2 | core-ops | `{ws}/projects` · S-03, S-04 | TC-005.1–.2, TC-005.V, TC-005.E, TC-BR-029.1–.2 | Done (M2) |
@@ -22,7 +22,7 @@ Chain: **Requirement → User story → Acceptance criteria → Design/module �
 | FR-016 | S | US-014 | AC-014.1 | audit | `{ws}/audit-events` · S-13 | TC-014.1 | Planned |
 | FR-017 | S | US-026 | AC-026.1–.4 | dashboard | `GET {ws}/dashboard` · S-14 | TC-026.1–.4 | Planned |
 | FR-020 | M | US-008 | AC-008.1–.2 | scope-guard | `…/change-requests` · S-06 | TC-008.1–.2 | Done (M3) |
-| FR-021 | M | US-009 | AC-009.1, .3, .5, .6 | scope-guard, ai | `…/versions/{n}/analyze` · S-07 | TC-009.1, .3, .5, .6, TC-AI-01–05 | Done (M3; mock and stub providers only, no model evaluated) |
+| FR-021 | M | US-009 | AC-009.1, .3, .5–.8 | scope-guard, ai | `…/versions/{n}/analyze` · S-07 | TC-009.1, .3, .5, .6, TC-AI-01–05, UT-SCOPE-01–08, IT-SCOPE-01–07 (`scope-check.test.ts`), CT-SC-01–03, CT-SUM-03, UT-HASH-SC-01/02, E2E-WF-04…07 (scope check) | Done (M3; scope check added at release closure, ADR-0022). Real model evaluated 2026-10-19: `qwen2.5:1.5b` **fails** the accuracy threshold ([AI evaluation results](ai-evaluation-results.md)) |
 | FR-022 | M | US-009, US-010 | AC-009.2 | scope-guard | `PATCH …/versions/{n}` · S-07 | TC-009.2 | Done (M3) |
 | FR-023 | M | US-010 | AC-010.1–.3 | scope-guard | propose · S-07 | TC-010.1–.3 | Done (M3) |
 | FR-024 | M | US-011 | AC-011.1–.2 | scope-guard | `…/propose` · S-07 | TC-011.1–.2, TC-BR-008 | Done (M3) |
@@ -66,7 +66,7 @@ Chain: **Requirement → User story → Acceptance criteria → Design/module �
 | SEC-006 rate limits | `platform/http/rate-limit.ts`, buckets in `app.ts` | TC-SEC-06, `security-hardening.test.ts` (XFF spoofing, per-email, per-IP spraying, register per IP, bounded memory); `scope-guard-ai.test.ts` (per-workspace AI limit, one concurrent analysis per version) | Done for auth and AI |
 | SEC-007 secrets | `platform/config`, `platform/logging` | config tests (no values in errors, production refusals), TC-SEC-07 | Done |
 | SEC-010 headers, lockfile, audit | `secureHeaders` (API), `proxy.ts` nonce CSP + `next.config.ts` headers (web), CI `npm audit` | Security header test, E2E CSP/header test | Done (CI audit not yet executed on GitHub) |
-| SEC-011 owner-only | `requireMembership({ role: OWNER })` + service check | TC-002.2, TC-SEC-03, TC-TEN-04 (role downgrade), TC-TEN-05 (per-workspace roles), TC-020.2 (invoice issue and void) | Done for settings, AI enablement, invoice issue and void. Member management (FR-004) is not built |
+| SEC-011 owner-only | `requireMembership({ role: OWNER })` + service check | TC-002.2, TC-SEC-03, TC-TEN-04 (role downgrade), TC-TEN-05 (per-workspace roles), TC-020.2 (invoice issue and void), TC-003.2 and TC-003.10 (members) | Done for settings, AI enablement, invoice issue and void, and member management |
 | NFR-008 strict TS, boundaries | `packages/config` | TC-ARCH-01 (13 tests), `tsc` in 5 workspaces | Done |
 | NFR-010 logs, health | `platform/logging`, `request-logger.ts`, `/healthz`, `/readyz` | TC-SEC-07, request-log test, readiness tests (pending migrations / DB down → 503) | Done |
 | NFR-012 360 px | M1 screens | E2E responsive (Chromium 360 px, Pixel 7) | Done for M1 screens |
@@ -110,7 +110,7 @@ Detailed cases are in [test cases](test-cases.md). Result is from the final run 
 | SEC-006 | AC-001.3 | TC-SEC-06a–c | `identity.test.ts`, `security-hardening.test.ts`, `atomicity-and-boundaries.test.ts` | Pass (auth). AI limits: Pass (`scope-guard-ai.test.ts`: per-workspace rate limit, one concurrent analysis per version) |
 | SEC-007 | — | TC-SEC-07, TC-SEC-CFG | `platform.test.ts`, `security-hardening.test.ts` | Pass |
 | SEC-010 | — | TC-SEC-10 | `security.test.ts`; E2E `SEC-010` | Pass |
-| SEC-011 | AC-002.2 | TC-002.2, TC-SEC-03, TC-TEN-04, TC-TEN-05 | `workspace.test.ts`, `security.test.ts`, `membership-lifecycle.test.ts`, `WorkspaceSettingsForm.test.tsx` | Pass (settings, AI enablement via TC-SEC-03, invoice issue and void via TC-020.2 in `invoices.test.ts`). Member management (FR-004) is not built |
+| SEC-011 | AC-002.2, AC-003.2 | TC-002.2, TC-SEC-03, TC-TEN-04, TC-TEN-05, TC-003.2, TC-003.10 | `workspace.test.ts`, `security.test.ts`, `membership-lifecycle.test.ts`, `members.test.ts`, `WorkspaceSettingsForm.test.tsx` | Pass (settings, AI enablement and member routes via TC-SEC-03; invoice issue and void via TC-020.2 and TC-003.10) |
 | NFR-002 / BR-028 | — | TC-BR-028a, TC-001.5, TC-BR-028.settings, TC-BR-028.baseline, TC-007.C | `platform.test.ts`, `atomicity-and-boundaries.test.ts`, `core-ops-requirements.test.ts` | Pass for implemented actions |
 | NFR-008 / BR-001 (boundary part) | — | TC-ARCH-01 | `packages/config/test/boundaries.test.ts` | Pass |
 | NFR-010 | — | TC-HLT-01, TC-REQ-ID, TC-SEC-07, TC-ERR-500 | `platform.test.ts`, `security.test.ts`, `error-mapping.test.ts` | Pass |
@@ -121,7 +121,7 @@ Detailed cases are in [test cases](test-cases.md). Result is from the final run 
 | FR-050–FR-054 | AC-022.1–.3, AC-009.3–.4 | TC-022.1–.3, TC-AI-01…05, TC-AI-OAC | `scope-guard-ai.test.ts`, `output.test.ts`, `AiSettings.test.tsx`; E2E | Pass (mock and stub providers only) |
 | FR-015, FR-030, FR-040, FR-041, BR-012, BR-013 (task links), BR-016, BR-018 (edit/delete guard), BR-020, BR-021 (preview) | AC-015.1–.2, AC-016.1, AC-017.1–.3, AC-018.1–.2, AC-024.1 | TC-015.x, TC-016.3–.5, TC-017.x, TC-018.x, TC-024.1, UT-ELIG-01…05 ([test cases §2e](test-cases.md#2e-delivery-and-billable-work-fr-015-fr-030-fr-040-fr-041-m4)) | `delivery-billing.test.ts`, `eligibility.test.ts`, `billing.test.tsx`, `TasksBoard.test.tsx`, `change-requests.test.tsx`; E2E `m4-delivery-billing.spec.ts` | Pass |
 | FR-042–FR-046, BR-017–BR-025, BR-028 (invoices), BR-030 (entries on invoices), ERR-006, ERR-007 | AC-019.1–.4, AC-020.1–.5, AC-021.1 | TC-019.x, TC-020.x, TC-021.1, TC-BR-019, TC-BR-023, TC-BR-030, UT-INV-01…05 ([test cases §2f](test-cases.md#2f-invoices-fr-042fr-046-m5)) | `invoices.test.ts`, `invoice-calc.test.ts`, `invoices.test.tsx`, `billing.test.tsx`; E2E `m5-invoices.spec.ts` (TC-E2E-01) | Pass |
-| FR-004, FR-016, FR-017, FR-060–FR-062 | see [acceptance criteria](../product/acceptance-criteria.md) | see the [test plan](test-plan.md) | E2E-WF-13 exists as `test.fixme` (needs FR-004 to add a member without seeding) | **Blocked**: not implemented (see [test cases §8](test-cases.md#8-blocked-requirements-not-implemented-yet)) |
+| FR-016, FR-017, FR-060–FR-062 | see [acceptance criteria](../product/acceptance-criteria.md) | see the [test plan](test-plan.md) | — | **Blocked**: not implemented (see [test cases §8](test-cases.md#8-blocked-requirements-not-implemented-yet)). FR-004 and E2E-WF-13 were unblocked at release closure |
 
 ## Business rules → tests
 
@@ -157,6 +157,7 @@ Detailed cases are in [test cases](test-cases.md). Result is from the final run 
 | BR-028 | TC-BR-028, TC-BR-028.baseline/.req/.task/.project, CR transitions (M3), `cr.tasks.created` (M4), `invoice.created/issued/voided` (M5) |
 | BR-029 | TC-004.3, TC-005.2, TC-005.R, TC-BR-029.1–.6 (Pass); TC-008.2 (Pass, `scope-guard-lifecycle.test.ts`); entries: `delivery-billing.test.ts` BR-029 (Pass) |
 | BR-030 | TC-BR-030 (entries on any invoice line cannot be deleted; no delete paths for decisions or issued invoices) |
+| BR-031 | UT-SCOPE-01–07 (`output.test.ts`), IT-SCOPE-01–03 (`scope-check.test.ts`), CT-SC-02, UT-HASH-SC-01/02 (Pass) |
 
 ## Non-functional, security, privacy, accessibility → verification
 

@@ -452,9 +452,116 @@ npm run dev                                 # web http://localhost:3000, API :40
 
 Only when the manual run row (step 7) succeeds may §13.1 change to **READY WITH LIMITATIONS**. The limitations that remain then:
 
-- no member management (FR-004; E2E-WF-13 stays `fixme`);
+- *(superseded by §14: members now exist and E2E-WF-13 runs; the AI scope check is evaluated and fails its accuracy threshold)*
 - invoices are not GST-compliant tax invoices;
 - approvals are recorded, not signed;
-- AI estimate quality is unevaluated;
+- AI scope-verdict accuracy fails its threshold with the only evaluated model, and effort estimates are unevaluated;
 - rate limits are in memory per process;
 - backup and restore have not been rehearsed.
+
+## 14. Theme alignment: AI scope check and members (2026-10-19)
+
+> **Status: not yet release-ready.** The P0 from §13 stayed closed for `def722b`, but the work below is **uncommitted and not CI-verified**, and the manual development-server and browser run is still open. Everything below was run locally on Windows 11.
+
+### 14.1 Official challenge criteria (verified from the challenge page on 2026-10-19)
+
+Source: https://dev.to/challenges/hacktoberfest-week2-2026-10-12.
+
+**Prompt ("Side Hustle"):**
+- Build something with open-source AI at its core: open-weight models, agent harnesses or local inference.
+- It should be something "someone would actually pay for", where the open pieces make the project work.
+- Keep the scope small and useful for a real person, such as a freelancer.
+
+**The post must explain why open innovation matters.** A first user earns bonus points.
+
+**Judging criteria, as the page lists them:**
+1. Writing Quality (weighted most).
+2. Relevance to the Prompt and Theme.
+3. Creativity.
+4. Technical Execution.
+5. Use of Partner Technology (optional).
+
+**Rules:**
+- The project must be new, started and completed in the challenge window.
+- AI tools are allowed.
+- Prior work must be credited.
+- Entrants must be 18+.
+- The deadline is 2026-10-18, 11:59 PM PDT.
+
+**Not code criteria, outside this section:** writing quality, the post and video, partner technology, the first user and the deadline.
+
+| Criterion (code-relevant) | Before | Gap | Change made | Verification |
+| --- | --- | --- | --- | --- |
+| Open-source AI at the core; "the open pieces make it work" | AI drafted proposal text at one step, off by default; nothing compared a request with the agreed scope; questions were discarded | The AI did not answer the product's central question | **Scope check** (`cr-analysis@2`): verdict plus evidence against **agreed** requirements, checked by the server (BR-031); questions and the confirmed verdict saved and hashed | UT-SCOPE-01–08, IT-SCOPE-01–07, CT-SC-01–03, CT-SUM-03, E2E-WF-04…07; [AI evaluation](ai-evaluation-results.md) |
+| AI that is useful, not decorative | Quality untested | No evidence | 23-case dataset, opt-in runner, thresholds fixed before runs; 3 real-model runs | T1, T2, T4 and T5 pass; **T3 fails** (0.30 vs 0.70) for `qwen2.5:1.5b` |
+| Useful for a real person: freelancer **and small team** | Solo only | FR-004 missing | Members: add an existing account, remove, last owner protected, owner-only finance kept | TC-003.1–.10, CT-MEM-01–04, E2E-WF-13, TC-SEC-01/02/03 member rows |
+| Why open innovation matters | Claimed in docs | Needed evidence | Local inference verified (`127.0.0.1:11434`, no external AI API); minimised prompt tested (SEC-008); model swappable by configuration | Evaluation runs; `scope-guard-ai.test.ts › SEC-008`; [results](ai-evaluation-results.md) |
+| Technical execution | Strong | Keep it green | Regression suites and new tests | §14.3 |
+
+### 14.2 What was implemented
+
+- **AI scope check (FR-021, BR-031, [ADR-0022](../architecture/adr/0022-scope-check-and-members.md)).**
+  - Prompt and schema `@2`, with pure server rules (`assessScope`).
+  - A UI scope-check block with evidence and an open "SoloOps changed the AI's verdict" notice.
+  - A person-confirmed `scopeVerdict` and `questionsForClient` saved on the version, bound by the hash when set (old hashes unchanged), and shown to the client on the proposal summary.
+  - Zero extra effort gives no estimate and no cost.
+  - Migration `0006`.
+- **Members (FR-004).**
+  - `GET` and `POST {ws}/members`, and `DELETE {ws}/members/{userId}`.
+  - Ports to identity, and audit in the same transaction.
+  - The last owner is protected under concurrency by `workspaces.membershipVersion` (migration `0007`). A first version used a timestamp, which **TC-003.8 caught leaving zero owners** under a race. It was fixed, and the race tests passed 10 out of 10 repeated runs.
+- **Evaluation.** `apps/api/src/modules/ai/eval/` (dataset, scoring, tests) and `apps/api/src/eval-ai.ts` (`npm run eval:ai`). Raw results are in `docs/quality/ai-eval/`.
+- The partial FR-004 contract edits made before this pass were kept and completed.
+
+### 14.3 Validation
+
+Final run on 2026-10-19 on the complete working tree (Windows 11, Node 22.14.0):
+
+| Command | Exit | Result |
+| --- | --- | --- |
+| `npm run lint` | 0 | ESLint clean; Prettier clean |
+| `npm run typecheck` | 0 | All 5 workspaces |
+| `npm run test:coverage` | 0 | **1,114 passed, 0 failed, 0 skipped** (api 801, web 192, contracts 85, api-client 21, config 15); before this work 1,051. Every gate met: api 95.42% statements / 87.3% branches; web 85.15% / 80.34% |
+| `npm run build` | 0 | API bundle and Next.js build |
+| `npm run docs:check` | 0 | "Checked 85 Markdown files. 0 error(s), 0 warning(s)." |
+| `npm run design:contrast` / `npm audit --audit-level=high` | 0 / 0 | 90 pairs, 0 failures / 0 vulnerabilities |
+| `npm run test:e2e` | 0 | **34 passed, 0 skipped** (was 33 + 1 skipped): E2E-WF-13 now runs, and E2E-WF-04…07 assert the scope check |
+| TC-003.5 and TC-003.8 race tests, 10 repeated runs | 0 | 10/10 stable |
+| `npm run eval:ai` against local Ollama `qwen2.5:1.5b` (3 runs) | 1 (by design: a threshold failed) | Run 2 (shipped prompt): T1 1.000, T2 0.030, **T3 0.304 ✗**, T4 0.000, T5 0.870 ([details](ai-evaluation-results.md)) |
+
+Regressions found and fixed during this pass:
+1. The new members status message added a second `role="status"`, which broke two existing E2E locators. The component now uses `aria-live` without the extra role.
+2. Formatting.
+3. Two test fixtures that predated the new required fields.
+
+No assertion or threshold was weakened.
+
+### 14.4 Alignment score and method
+
+Scored on the same five theme elements as the 78% estimate given before this work. Each score is backed by the evidence above.
+
+| Element | Weight | Before | Now | Basis |
+| --- | --- | --- | --- | --- |
+| Uses open-source AI (open-weight, local inference) | 20 | 20 | 20 | Ollama `qwen2.5:1.5b` through the provider adapter; real runs recorded |
+| The open AI is what makes the project work | 30 | 10 | **18** | AI now answers the central scope question at the decision point, with evidence, and its output reaches the client proposal. As implemented, that would earn full marks (30). With the only evaluated model, verdicts are 30% accurate and most end `UNCLEAR`. The score reflects demonstrated value, not design, so 12 points are withheld until a model passes T3 |
+| Something someone would pay for | 20 | 18 | 18 | A real money problem; **no user has validated it**, so willingness to pay is unproven |
+| Small and useful for a real person (freelancer or small team) | 20 | 20 | 20 | Solo and small-team workflows both work end to end (E2E) |
+| Open innovation genuinely matters | 10 | 10 | 10 | Local inference with minimised data, verified; model swappable by configuration |
+| **Total** | **100** | **78** | **86** | |
+
+**Kept separate, not mixed into the score:**
+- **Implementation coverage:** the functional requirements weighted Must 3, Should 2, Could 1.
+  - Must: 26/26.
+  - Should: 8/11 (FR-004 added).
+  - Could: 1/4.
+  - Weighted: (78 + 16 + 1) / 104 = **91%** (89% before).
+- **Demonstrated AI quality:** **not proven.** T3 fails for the only evaluated model.
+- **Market validation:** none. No users, no payments.
+
+### 14.5 What cannot honestly be marked complete
+
+1. **AI verdict accuracy.** T3 fails for `qwen2.5:1.5b`. The next step is to evaluate a larger open-weight model with the same command, after the maintainer approves the download (several GB).
+2. **CI on the new work.** It is not committed or pushed, so it has not run in CI.
+3. **The manual development-server and browser journey.** Still not done.
+4. **Willingness to pay and real users.** No evidence.
+5. **The human rubric for AI proposal text.** Not built.

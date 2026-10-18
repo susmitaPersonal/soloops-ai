@@ -11,6 +11,7 @@ IDs are stable. Each rule names where it is enforced.
 | BR-001 | AI output is a **suggestion**. It is stored as an AI generation and can be copied into a *draft* proposal. It never changes the status of any entity. | `ai` module has no write access to scope-guard/billing; architecture lint rule |
 | BR-002 | AI must never approve, reject or propose a change request, create approvals, issue or void invoices, or set prices. These transitions require an authenticated human request to a dedicated endpoint. | scope-guard and billing services; route auth |
 | BR-003 | AI-suggested effort is used only after a human confirms it. Confirmation happens when the human proposes the version containing those values. | scope-guard propose service |
+| BR-031 | An AI **scope verdict** (new scope, changes agreed scope, likely already covered, unclear) is shown only when its evidence cites real, **agreed** (baselined) requirements that support it; otherwise it is shown as `UNCLEAR` with the reason. The verdict stored on a version is the one a person chose; it is part of the approved content (BR-008). | ai `assessScope` (pure); scope-guard update and propose; ADR-0022 |
 
 ## Scope baseline
 

@@ -4,7 +4,7 @@
 
 The current verification status, with evidence, is in [release readiness audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19).
 
-- **Milestones M1–M5 are implemented:** registration, sign-in/out, sessions, workspace isolation, workspace settings, clients, projects, requirements, scope baselines, tasks, change requests with hash-bound decisions, the approvals queue, advisory AI analysis, tasks from approved versions, billable work with server eligibility, the project overview (M4), and invoice drafts, owner issue with gapless numbers, void and print (M5). Member management (FR-004), the audit log UI (FR-016), the dashboard (FR-017) and Community features do not exist yet.
+- **Milestones M1–M5 are implemented:** registration, sign-in/out, sessions, workspace isolation, workspace settings, clients, projects, requirements, scope baselines, tasks, change requests with hash-bound decisions, the approvals queue, advisory AI analysis, tasks from approved versions, billable work with server eligibility, the project overview (M4), and invoice drafts, owner issue with gapless numbers, void and print (M5). At release closure, workspace members (FR-004) and the evidence-bound AI scope check (FR-021, BR-031) were added ([ADR-0022](../architecture/adr/0022-scope-check-and-members.md)). The audit log UI (FR-016), the dashboard (FR-017) and Community features do not exist yet.
 - **No model has been evaluated** (ai-architecture §7). The `openai-compatible` adapter is verified against a local HTTP stub, plus one integration smoke test with a real open-weight model on 2026-10-18: Ollama `qwen2.5:1.5b`, 4/4 schema-valid with `AI_STRUCTURED_OUTPUT=json_schema` and 1/4 with `prompt` ([release audit §12](release-readiness-audit.md#12-release-closure-sprint-2026-10-18)). Its effort ranges varied widely between identical requests (10–40 h and 50–150 h), so estimate quality is unproven. A repeat on 2026-10-19 called the AI service directly, without the UI, with the same model: 3/3 schema-valid in each mode. Identical requests again gave ranges from 10–30 h to 100–400 h ([release audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19)). The UI does not yet warn that estimates are unevaluated.
 - **GitHub CI passed** on 2026-10-19 for `def722b`: both jobs ([run](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746)).
 - **Docker Compose MongoDB** was verified on 2026-10-18 on the maintainer machine: 746 API tests and 33 E2E tests passed against it (release audit [§11](release-readiness-audit.md#11-checklist-audit-second-pass-2026-10-18), [§12.3](release-readiness-audit.md#123-commands-run-this-sprint-and-results)). On Linux it is covered by the CI `docker-mongodb` job, which passed on 2026-10-19. Default test runs use `mongodb-memory-server` (a real `mongod`, no Docker).
@@ -24,16 +24,16 @@ The current verification status, with evidence, is in [release readiness audit �
 | No manual System/Light/Dark theme toggle yet: dark mode follows the system setting only | OQ-017 |
 | Navigation shows Home, Approvals, Clients, Projects, Billing and Settings; there is no dashboard (FR-017). Below 1024 px the sidebar becomes a wrapping top bar, not the specified focus-trapped drawer | Design system §7.3 (drawer not built in M2) |
 | UI strings are not yet centralised for translation | NFR-013 (Should) |
-| Members management (FR-004) and the audit log (S-13) are not in Settings yet. The AI section is (FR-053, FR-054) | FR-004, FR-016 |
+| The audit log (S-13) is not in Settings yet. Members (FR-004) and the AI section (FR-053, FR-054) are | FR-016 |
 
 ## Implementation limitations (M2 Core Ops)
 
 | Limitation | Reason / reference |
 | --- | --- |
-| The task assignee picker offers only "Unassigned" and "Me", and tasks assigned to other members show "Another member". The API accepts any member's ID | FR-004 (member API) is not built |
+| The task assignee picker offers only "Unassigned" and "Me", and tasks assigned to other members show "Another member". The API accepts any member's ID, and the member list now exists (FR-004), but the picker was not extended in this release | S-09 |
 | Lists show 50 items with a "Load more" link (clients, projects), or the 100 most recent tasks. There is no search, sorting or assignee filter in the UI, although the API filters tasks by status and assignee | S-02, S-09 |
 | No unarchive. Archiving is one-way in the MVP, as specified | FR-010, FR-011 |
-| The task assignee's membership is checked outside the write transaction. A membership removed at that exact moment could still be assigned. Member removal (FR-004) does not exist yet | AC-016.2, ADR-0017 Security implications |
+| The task assignee's membership is checked outside the write transaction. Now that members can be removed (FR-004), a member removed at that exact moment could still be assigned; they cannot see the task, because access is checked on every request | AC-016.2, ADR-0017 Security implications |
 | Any member can archive a client or project, and there is no unarchive. This follows api-design §4 (Auth = M); making archive owner-only, or adding unarchive, is a product decision once members exist | FR-010, FR-011 |
 | At most 500 active requirements per project | ADR-0017 §10 |
 | Requirement add and edit use an inline form, and criteria are typed one per line, instead of the specified side drawer and repeatable list. Dialogs use the native `<dialog>` element, not Radix | S-05, design system §7.8, ADR-0017 §12 |
@@ -72,9 +72,19 @@ The current verification status, with evidence, is in [release readiness audit �
 | The print view relies on the browser's "Print / Save as PDF"; there is no server-generated PDF | FR-045 |
 | The "Unbilled by project" tab of S-16 is not built: unbilled work is reviewed per project (S-10) | S-16 |
 | Draft line edits and draft deletion are not audited (only create, issue and void are, per BR-028) | BR-028, ADR-0020 §4 |
-| A member cannot be added through the UI or API (FR-004), so the owner-only UI path (E2E-WF-13) is verified at API and component level only | FR-004 |
 | Two draft-creation guards (the `invoiceId: null` reservation filter and the reserved-count check) are defense in depth: the in-transaction read and MongoDB write-conflict retry already refuse double reservation, so removing either alone fails no test | ADR-0020 Consequences |
 | The AI status cache is per API process (30 s) | ADR-0020 §10 |
+
+## Implementation limitations (release closure: members and the AI scope check)
+
+| Limitation | Reason / reference |
+| --- | --- |
+| **The AI scope check is not accurate with the only evaluated model.** `qwen2.5:1.5b` reached 30% final verdict accuracy against a 70% threshold; most of its verdicts end as `UNCLEAR` because its evidence contradicts them. It never wrongly said "already covered" with the shipped prompt. No model is recommended | [AI evaluation results](ai-evaluation-results.md) |
+| Only one small model was evaluated, on one machine, with 23 synthetic cases. Larger open models are not evaluated yet | ai-architecture §7 |
+| Members are added by the email of an existing SoloOps account only: no invitations, no role changes, no ownership transfer. New members are always `MEMBER`; a second owner can only exist through data created outside the app | FR-004 scope, ADR-0022 |
+| Adding a member by email tells an owner whether that email has an account. Registration already reveals this | SEC-006, AC-001.2 |
+| A workspace has at most 50 members, listed without pagination | ADR-0022 |
+| The evaluation measures verdicts only. The human rubric for proposal text (clarity, usefulness) is not built | ai-architecture §7 |
 
 ## Planned MVP limitations (by design)
 

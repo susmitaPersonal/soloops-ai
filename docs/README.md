@@ -2,7 +2,7 @@
 
 Start here. Documents marked **authoritative** win in conflicts ([precedence](engineering/repository-guide.md#authoritative-sources-precedence)).
 
-> **Current state:** milestones **M1–M5** are implemented and tested: workspace and sessions, Core Ops, Scope Guard with advisory AI, delivery and billable work, and invoices. Member management, the audit log UI, the dashboard and Community are **not implemented yet**. See [implementation status](quality/implementation-status.md) and the [release readiness audit](quality/release-readiness-audit.md).
+> **Current state:** milestones **M1–M5** are implemented and tested: workspace and sessions, Core Ops, Scope Guard with advisory AI, delivery and billable work, and invoices. Workspace members and the evidence-bound AI scope check were added at release closure ([AI evaluation results](quality/ai-evaluation-results.md)). The audit log UI, the dashboard and Community are **not implemented yet**. See [implementation status](quality/implementation-status.md) and the [release readiness audit](quality/release-readiness-audit.md).
 
 ## Product
 | Document | Purpose |
@@ -41,7 +41,7 @@ Start here. Documents marked **authoritative** win in conflicts ([precedence](en
 [Coding standards](engineering/coding-standards.md) · [Repository guide](engineering/repository-guide.md) · [Local development](engineering/local-development.md) · [Environment configuration](engineering/environment-configuration.md) · [Troubleshooting](engineering/troubleshooting.md) · [Definition of done](engineering/definition-of-done.md)
 
 ## Quality
-[Traceability matrix](quality/requirements-traceability.md) · [Testing strategy](quality/testing-strategy.md) · [Test cases](quality/test-cases.md) · [Test plan](quality/test-plan.md) · [Test execution report](quality/test-execution-report.md) · [Risk register](quality/risk-register.md) · [Known limitations](quality/known-limitations.md) · [Implementation status](quality/implementation-status.md) · [Release readiness audit](quality/release-readiness-audit.md)
+[Traceability matrix](quality/requirements-traceability.md) · [Testing strategy](quality/testing-strategy.md) · [Test cases](quality/test-cases.md) · [Test plan](quality/test-plan.md) · [Test execution report](quality/test-execution-report.md) · [Risk register](quality/risk-register.md) · [Known limitations](quality/known-limitations.md) · [Implementation status](quality/implementation-status.md) · [Release readiness audit](quality/release-readiness-audit.md) · [AI evaluation results](quality/ai-evaluation-results.md)
 
 ## Contributing
 [Contribution guide](contributing/contribution-guide.md) · [PR checklist](contributing/pull-request-checklist.md) · [Issue guidelines](contributing/issue-guidelines.md) · [Code of conduct](contributing/code-of-conduct.md)

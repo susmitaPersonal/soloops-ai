@@ -1,6 +1,6 @@
 # Implementation Status
 
-**Last updated:** 2026-10-19. **Current milestone:** M5 (Invoice drafting and AI resilience) **complete, pending maintainer review**. M1–M4 are also complete. **Release status: not yet release-ready (one manual check open).** The code is published at https://github.com/susmitaPersonal/soloops-ai, and both CI jobs passed on `def722b` ([run](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746)). The development server and browser run is still to be done ([release readiness audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19)). **Next milestone:** M6 (MVP hardening).
+**Last updated:** 2026-10-19. **Current milestone:** M5 complete, plus the release-closure additions **workspace members (FR-004)** and the **evidence-bound AI scope check (FR-021, BR-031)** ([ADR-0022](../architecture/adr/0022-scope-check-and-members.md)), pending maintainer review. **Release status: not yet release-ready.** CI passed on GitHub on `def722b`, but the additions are not yet pushed or CI-verified, and the manual development-server and browser run is still open ([release readiness audit §14](release-readiness-audit.md#14-theme-alignment-ai-scope-check-and-members-2026-10-19)). **Next milestone:** M6 (MVP hardening).
 
 > This report reflects **implemented and tested code only**. Documentation does not count as implementation. Every "Done" below has passing tests quoted in the [validation log](#validation-log).
 
@@ -14,10 +14,11 @@
 | Platform security controls (SEC-001–007, SEC-010, SEC-011 for settings) | Done for M1 endpoints |
 | Core Ops: clients, projects, requirements, baselines, tasks (FR-010–FR-014, BR-004/005/015/029) | Done (M2; task links to approved change-request versions M4) |
 | Scope Guard: change requests, versions, hash-bound decisions, history, approvals queue (FR-020–FR-029, FR-032) | Done (M3) |
-| AI: provider port, analysis, generations, status, enablement (FR-050–FR-054) | Done (M3). Automated tests use the mock provider and a local HTTP stub. One small local open-weight model (Ollama `qwen2.5:1.5b`) was smoke-tested manually on 2026-10-18 (UI) and 2026-10-19 (AI service). No model has been evaluated |
+| AI: provider port, analysis, generations, status, enablement (FR-050–FR-054); scope check (FR-021, BR-031) | Done. Automated tests use the mock provider, a scripted provider and a local HTTP stub. The scope check was **evaluated** on 2026-10-19 with Ollama `qwen2.5:1.5b` (23 cases × 3): it passes 4 of 5 thresholds but **fails verdict accuracy** (0.30 vs 0.70), so no model is recommended ([AI evaluation results](ai-evaluation-results.md)) |
 | Delivery: tasks from approved versions (FR-030), billable entries with server eligibility (FR-040, FR-041), project overview (FR-015) | Done (M4, [ADR-0019](../architecture/adr/0019-m4-delivery-and-billable-work-implementation-choices.md)) |
 | Invoices: drafts, adjustments, owner issue with gapless numbers, void, print (FR-042–FR-046) | Done (M5, [ADR-0020](../architecture/adr/0020-m5-invoice-implementation-choices.md)) |
-| Members (FR-004), audit log UI (FR-016), dashboard (FR-017), Community | **Not started** |
+| Members (FR-004): list, add an existing account by email, remove; last owner protected | Done (release closure, ADR-0022). E2E-WF-13 now runs |
+| Audit log UI (FR-016), dashboard (FR-017), Community | **Not started** |
 
 ## Roadmap progress
 
@@ -148,8 +149,8 @@ The current list, with exact commands, is in [release readiness audit §13](rele
 
 1. **Done 2026-10-19:** published to https://github.com/susmitaPersonal/soloops-ai. Both CI jobs (`validate`, `docker-mongodb`) passed on `def722b` ([run](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746)). A maintainer review of the commits is not formally documented.
 2. **P1:** A person runs `npm run dev` against a dedicated database and completes the browser journey from change request to invoice. Record the result in the release audit.
-3. Build FR-004 member management, then unblock E2E-WF-13.
-4. Build the AI evaluation harness (ai-architecture §7) before recommending any model. The real-endpoint integration is smoke-tested only.
+3. *Done 2026-10-19:* FR-004 member management; E2E-WF-13 unblocked. Push it and confirm CI passes on the new commit.
+4. *Done 2026-10-19:* the scope-check evaluation harness (`npm run eval:ai`). **Next:** evaluate a larger open-weight model with the same dataset and thresholds (needs the maintainer's approval to download it). No model is recommended until one passes.
 
 *Historical:* the earlier steps "make the first commit", "run the suite against Docker Compose MongoDB" and "verify one real endpoint" were done on 2026-10-18 and 2026-10-19 (release audit §11–§13).
 
@@ -191,5 +192,6 @@ Record every validation run here with its exact command and actual result.
 | 2026-10-19 (independent audit) | Fresh `git clone` of `89cdc6c`, then `npm ci`, `npm run validate`, `npm run test:coverage`; shuffled API run (`--sequence.shuffle`, seed 20261019); real-model check through the AI service (Ollama `qwen2.5:1.5b`) | All exit 0: Vitest 1051 passed; shuffled API run 746/746; AI 3/3 `json_schema`, 3/3 `prompt`, outage → 502 with a FAILED record. Details: [release audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19) |
 | 2026-10-19 (release closure) | `npm run lint`, `typecheck`, `test:coverage`, `build`, `design:contrast`, `npm audit`, `test:e2e`, plus a mutation check of the new home-page assertion | All exit 0 after one E2E test-locator fix: Vitest 1051 passed; E2E 33 passed, 1 skipped; the assertion fails on the old home-page copy. Details: [release audit §13.4](release-readiness-audit.md#134-validation-run-after-these-changes) |
 | 2026-10-19 (GitHub CI) | First GitHub Actions run on `main` (`def722b`) | `validate` success, `docker-mongodb` success ([run](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746)) |
+| 2026-10-19 (scope check + members) | `npm run lint`, `typecheck`, `test:coverage`, `build`, `docs:check`, `design:contrast`, `npm audit`, `test:e2e`; race tests ×10; `npm run eval:ai` ×3 (local `qwen2.5:1.5b`) | All exit 0: Vitest **1114 passed** (api 801, web 192, contracts 85, api-client 21, config 15); E2E **34 passed, 0 skipped**; races 10/10. Evaluation: T3 accuracy **fails** (0.304 vs 0.70); T1, T2, T4, T5 pass with the shipped prompt. Details: [release audit §14](release-readiness-audit.md#14-theme-alignment-ai-scope-check-and-members-2026-10-19), [AI evaluation results](ai-evaluation-results.md) |
 | 2026-10-16 (M1) | `docker compose up -d mongo` | **Not run**: Docker daemon not running on this machine |
 | 2026-10-16 (M1) | CI on GitHub | **Not run**: nothing committed or pushed yet |

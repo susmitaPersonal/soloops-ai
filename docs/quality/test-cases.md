@@ -213,6 +213,27 @@ Automated in `apps/api/test/invoices.test.ts` (23 tests) and `src/modules/billin
 | TC-E2E-01 | J1–J4 | E | Complete principal workflow, UI only | Register → settings (GST 18%, RS) → AI on → client → project → requirement → baseline → CR → AI analysis (mock) → propose → approval → tasks → 2 h of work → draft → adjustment (−₹500) → DRAFT print → issue RS-0001 (₹2,950.00) → print → void → work unbilled again | `m5-invoices.spec.ts › TC-E2E-01 …` | Pass |
 | TC-AI-HC | ai-architecture §6, FR-051 | I | AI status probe | One probe per 30 s window, even when the endpoint is unreachable | `› TC-AI-HC …` (`scope-guard-ai.test.ts`) | Pass |
 
+## 2g. Members and the AI scope check (FR-004, FR-021, BR-031; release closure)
+
+Automated in `apps/api/test/members.test.ts` (10 tests), `apps/api/test/scope-check.test.ts` (7), `src/modules/ai/domain/output.test.ts` (scope and prompt cases), `src/modules/ai/eval/score.test.ts` (5), `src/modules/scope-guard/domain/version-rules.test.ts` (3 new); web `MembersSettings.test.tsx` (4) and `change-requests.test.tsx` (CT-SC-01–03, CT-SUM-03); E2E `principal-workflow.spec.ts` (E2E-WF-13) and `m3-scope-guard.spec.ts` (scope check in E2E-WF-04…07). Design: [ADR-0022](../architecture/adr/0022-scope-check-and-members.md).
+
+| ID | Req | Lvl | Scenario / objective | Expected | Automated test | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| TC-003.1 | AC-003.1, BR-028 | I, C, E | Owner adds an existing account by email | `201` MEMBER; access granted; `member.added` audited | `members.test.ts › TC-003.1`; CT-MEM-01; E2E-WF-13 | Pass |
+| TC-003.2 | AC-003.2, SEC-011 | I, C | A member adds or removes members | `403 FORBIDDEN`; nothing changes; no form for members | `› TC-003.2`; CT-MEM-04; TC-SEC-03 member rows | Pass |
+| TC-003.3–.4 | AC-003.1 | I, C | Unknown email, duplicate, self, invalid, upper-case email | `422` on `email` (no membership); upper-case matches | `› TC-003.3`, `› TC-003.4`; CT-MEM-02 | Pass |
+| TC-003.5 | AC-003.1 | I | Two concurrent adds of the same user | Exactly one membership (`201` + `422`) | `› TC-003.5` (10 repeated runs stable) | Pass |
+| TC-003.6 | AC-003.3, SEC-004 | I, E | Owner removes a member | `204`; their next request `404`; `member.removed` audited; own workspace kept | `› TC-003.6`; E2E-WF-13 | Pass |
+| TC-003.7–.8 | AC-003.4 | I | Remove the last owner; two owners remove each other at once | `409 INVALID_STATE_TRANSITION`; exactly one owner remains | `› TC-003.7`, `› TC-003.8` (10 repeated runs stable) | Pass |
+| TC-003.9 | SEC-004 | I | Unknown, foreign or malformed user ID | `404` | `› TC-003.9`; TC-SEC-01 member rows | Pass |
+| TC-003.10 | BR-023, AC-020.2 | I, E | A member added through the API drafts an invoice | Member issue/void → `403`, no number used; owner issues | `› TC-003.10`; E2E-WF-13 | Pass |
+| UT-SCOPE-01–08 | BR-031 | U | Server evidence rules | Supported verdicts kept; invented keys dropped; draft requirements → related; unsupported or contradictory → `UNCLEAR` with reasons | `output.test.ts` | Pass |
+| IT-SCOPE-01–03 | AC-009.7, BR-001 | I | Scope check through the API (scripted provider) | Evidence resolved to real requirements; invented → `UNCLEAR`; no approval, task or invoice created | `scope-check.test.ts` | Pass |
+| IT-SCOPE-04–07 | AC-009.8, BR-006, BR-008, BR-026 | I | Confirmed verdict and questions | Saved, hashed when set, immutable after propose, on the summary; pre-0006 versions keep their hash; zero effort → no estimate or cost | `scope-check.test.ts`; UT-HASH-SC-01/02 | Pass |
+| CT-SC-01–03, CT-SUM-03 | AC-009.7–.8 | C | Scope check UI and summary | Verdict in words with evidence; downgrade explained; applied verdict editable with provenance; plain-language verdict and questions for the client | `change-requests.test.tsx` | Pass |
+| UT-EVAL-01–05 | ai-architecture §7 | U | Evaluation dataset and scoring | ≥ 20 cases in every category; pre-registered thresholds; metrics computed correctly | `score.test.ts` | Pass |
+| EVAL-SCOPE | ai-architecture §7 | Manual (real model) | 23 cases × 3 runs against the local model | Every threshold met | `npm run eval:ai`; [results](ai-evaluation-results.md) | **Fail** for `qwen2.5:1.5b` (T3 accuracy 0.30) |
+
 ## 3. Workspace isolation and authorisation (SEC-004, SEC-011)
 
 | ID | Req | Lvl | Scenario / objective | Preconditions | Input | Steps | Expected | Automated test | Actual | Status |
@@ -282,10 +303,8 @@ These cases are designed (see the [test plan](test-plan.md)) but **cannot run**,
 
 | Test cases | Requirements / rules | Waits for | Notes |
 | --- | --- | --- | --- |
-| TC-003.1–.2 | FR-004 members | FR-004 (Should) | `addMember` fixture used meanwhile |
-| AI evaluation harness | ai-architecture §7 | Needs a real endpoint and a dataset | Not part of CI; no model is recommended |
+| AI evaluation (human rubric) | ai-architecture §7 | A rubric and reviewers | The scope-check harness is built and was run (EVAL-SCOPE above); the human rubric for proposal text is not |
 | TC-026.x, TC-014.1 (audit UI), TC-023.1, TC-025.1 | FR-016, FR-017, FR-060, FR-061 | Later milestones | |
-| E2E-WF-13 | Member cannot issue through the UI | FR-004 (member management) | A second member can only be created by seeding today, which the E2E rules forbid. The rule itself passes at API (TC-020.2, TC-SEC-03) and component (CT-INV-02) level. `test.fixme` in `principal-workflow.spec.ts`. All other E2E-WF steps run (`m2`…`m5` specs) |
 
 ## 9. Manual scenarios (not automated)
 
