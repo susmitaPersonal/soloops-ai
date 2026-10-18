@@ -188,8 +188,8 @@ describe('FR-021 analysis: success path and the advisory boundary', () => {
     expect(res.status).toBe(200);
     const body = await json(res);
     expect(body).toMatchObject({
-      promptVersion: 'cr-analysis@1',
-      schemaVersion: 'cr-analysis-output@1',
+      promptVersion: 'cr-analysis@2',
+      schemaVersion: 'cr-analysis-output@2',
       provider: 'mock',
       model: 'scripted-model',
       warnings: [],
@@ -214,8 +214,8 @@ describe('FR-021 analysis: success path and the advisory boundary', () => {
     expect(gen).toMatchObject({
       _id: body.generationId,
       feature: 'cr-analysis',
-      promptVersion: 'cr-analysis@1',
-      schemaVersion: 'cr-analysis-output@1',
+      promptVersion: 'cr-analysis@2',
+      schemaVersion: 'cr-analysis-output@2',
       provider: 'mock',
       model: 'scripted-model',
       status: 'SUCCEEDED',
@@ -273,6 +273,7 @@ describe('FR-021 analysis: success path and the advisory boundary', () => {
         'outOfScope',
         'questionsForClient',
         'risks',
+        'scope',
         'timelineImpact',
       ].sort(),
     );
@@ -319,7 +320,7 @@ describe('FR-021 analysis: success path and the advisory boundary', () => {
     ]) {
       expect(prompt).not.toContain(secret);
     }
-    expect(prompt).toContain('REQ-1: Customer login');
+    expect(prompt).toContain('REQ-1 [agreed]: Customer login');
   });
 
   it('AI_STORE_PROMPTS=true stores the prompt with the generation', async () => {

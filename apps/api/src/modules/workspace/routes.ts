@@ -1,8 +1,11 @@
 import {
+  addMemberRequestSchema,
   aiEnablementRequestSchema,
+  idSchema,
   updateWorkspaceSettingsRequestSchema,
 } from '@soloops/contracts';
 import { Hono } from 'hono';
+import { errors } from '../../platform/errors';
 import type { AppEnv } from '../../platform/http/types';
 import { jsonBody, parseIfMatch } from '../../platform/http/validate';
 import { requireMembership } from './membership';
@@ -48,6 +51,27 @@ export function createWorkspaceRoutes(service: WorkspaceService) {
       return c.json(dto);
     },
   );
+
+  // FR-004 / S-12: any member sees who is in the workspace (public profile only).
+  routes.get('/members', requireMembership(service), async (c) =>
+    c.json({ items: await service.listMembers(c.get('ctx')) }),
+  );
+
+  // FR-004 / AC-003.1–.2: owner only; adds an existing user as MEMBER.
+  routes.post(
+    '/members',
+    requireMembership(service, { role: 'OWNER' }),
+    jsonBody(addMemberRequestSchema),
+    async (c) => c.json(await service.addMember(c.get('ctx'), c.req.valid('json').email), 201),
+  );
+
+  // FR-004 / S-12: owner only; the last owner can never be removed.
+  routes.delete('/members/:userId', requireMembership(service, { role: 'OWNER' }), async (c) => {
+    const userId = idSchema.safeParse(c.req.param('userId'));
+    if (!userId.success) throw errors.notFound();
+    await service.removeMember(c.get('ctx'), userId.data);
+    return c.body(null, 204);
+  });
 
   return routes;
 }

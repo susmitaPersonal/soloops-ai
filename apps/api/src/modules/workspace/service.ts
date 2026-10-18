@@ -1,14 +1,17 @@
 import {
   AI_DISCLOSURE,
+  MAX_WORKSPACE_MEMBERS,
   WORKSPACE_DEFAULTS,
   type AiStatus,
+  type MemberDto,
+  type UserDto,
   type updateWorkspaceSettingsRequestSchema,
   type WorkspaceSettingsDto,
   type WorkspaceSummary,
 } from '@soloops/contracts';
 import type { z } from 'zod';
 import type { Clock } from '../../platform/clock';
-import type { Database, TxSession } from '../../platform/db';
+import { DuplicateKeyError, type Database, type TxSession } from '../../platform/db';
 import { errors } from '../../platform/errors';
 import type { TenantCtx } from '../../platform/http/types';
 import { newId } from '../../platform/ids';
@@ -25,13 +28,32 @@ export interface AiProviderInfo {
   health(): Promise<AiStatus['health']>;
 }
 
+/**
+ * Ports filled after the identity service exists (identity depends on workspace for registration,
+ * so workspace never imports identity). FR-004 needs public user profiles only.
+ */
+export interface WorkspacePorts {
+  findUserByEmail?: (email: string) => Promise<UserDto | null>;
+  getUsers?: (ids: string[]) => Promise<UserDto[]>;
+}
+
 export function createWorkspaceService(deps: {
   db: Database;
   clock: Clock;
   audit: AuditService;
   ai: AiProviderInfo;
+  ports?: WorkspacePorts;
 }) {
   const repo = createWorkspaceRepository(deps.db);
+  const ports: WorkspacePorts = deps.ports ?? {};
+  const usersPort = () => {
+    if (!ports.findUserByEmail || !ports.getUsers)
+      throw new Error('workspace user ports not wired');
+    return { findUserByEmail: ports.findUserByEmail, getUsers: ports.getUsers };
+  };
+  const requireOwner = (ctx: TenantCtx) => {
+    if (ctx.role !== 'OWNER') throw errors.forbidden('Only workspace owners can manage members.');
+  };
 
   return {
     /** FR-003: called inside the registration transaction; the registering user becomes OWNER. */
@@ -93,6 +115,123 @@ export function createWorkspaceService(deps: {
         if (ws) summaries.push({ id: ws._id, name: ws.name, role: m.role });
       }
       return summaries;
+    },
+
+    /** FR-004 / S-12: members with their public profile; owners first, then by join date. */
+    async listMembers(ctx: TenantCtx): Promise<MemberDto[]> {
+      const rows = await repo.listMemberships(ctx.workspaceId, MAX_WORKSPACE_MEMBERS);
+      const users = new Map(
+        (await usersPort().getUsers(rows.map((m) => m.userId))).map((u) => [u.id, u]),
+      );
+      return rows
+        .flatMap((m) => {
+          const u = users.get(m.userId);
+          return u
+            ? [
+                {
+                  userId: u.id,
+                  name: u.name,
+                  email: u.email,
+                  role: m.role,
+                  joinedAt: m.createdAt.toISOString(),
+                },
+              ]
+            : [];
+        })
+        .sort((a, b) => (a.role === b.role ? 0 : a.role === 'OWNER' ? -1 : 1));
+    },
+
+    /**
+     * FR-004 / AC-003.1: an owner adds an EXISTING user, by email, as MEMBER. Audited in the same
+     * transaction (BR-028). Unknown email or an existing member → 422 on `email`.
+     */
+    async addMember(ctx: TenantCtx, email: string): Promise<MemberDto> {
+      requireOwner(ctx);
+      const user = await usersPort().findUserByEmail(email);
+      if (!user) {
+        throw errors.validationFailed([
+          {
+            path: 'email',
+            message:
+              'No SoloOps account uses this email. Ask them to register first, then add them.',
+          },
+        ]);
+      }
+      const alreadyMember = () =>
+        errors.validationFailed([
+          { path: 'email', message: `${user.email} is already a member of this workspace.` },
+        ]);
+      const at = deps.clock.now();
+      const membershipId = newId();
+      try {
+        await deps.db.withTransaction(async (tx) => {
+          if (await repo.findMembership(ctx.workspaceId, user.id, tx)) throw alreadyMember();
+          if ((await repo.countMemberships(ctx.workspaceId, tx)) >= MAX_WORKSPACE_MEMBERS) {
+            throw errors.validationFailed([
+              {
+                path: 'email',
+                message: `A workspace can have at most ${MAX_WORKSPACE_MEMBERS} members.`,
+              },
+            ]);
+          }
+          await repo.bumpMembershipVersion(ctx.workspaceId, tx);
+          await repo.insertMembership(
+            ctx.workspaceId,
+            { _id: membershipId, userId: user.id, role: 'MEMBER', createdAt: at, updatedAt: at },
+            tx,
+          );
+          await deps.audit.record(tx, {
+            workspaceId: ctx.workspaceId,
+            actorUserId: ctx.userId,
+            action: 'member.added',
+            entity: { type: 'MEMBERSHIP', id: membershipId },
+            data: { userId: user.id, role: 'MEMBER' },
+            requestId: ctx.requestId,
+          });
+        });
+      } catch (err) {
+        // A concurrent add of the same user hit the unique (workspaceId, userId) index.
+        if (err instanceof DuplicateKeyError) throw alreadyMember();
+        throw err;
+      }
+      return {
+        userId: user.id,
+        name: user.name,
+        email: user.email,
+        role: 'MEMBER',
+        joinedAt: at.toISOString(),
+      };
+    },
+
+    /**
+     * FR-004 / S-12: an owner removes a member. The last OWNER can never be removed; the workspace
+     * document is written in the same transaction so concurrent removals cannot both pass the check.
+     * Access ends on the removed user's next request (membership is checked on every request).
+     */
+    async removeMember(ctx: TenantCtx, userId: string): Promise<void> {
+      requireOwner(ctx);
+      await deps.db.withTransaction(async (tx) => {
+        const membership = await repo.findMembership(ctx.workspaceId, userId, tx);
+        if (!membership) throw errors.notFound();
+        await repo.bumpMembershipVersion(ctx.workspaceId, tx);
+        if (
+          membership.role === 'OWNER' &&
+          (await repo.countMemberships(ctx.workspaceId, tx, 'OWNER')) <= 1
+        ) {
+          throw errors.invalidStateTransition(
+            'The last owner can’t be removed. A workspace always needs an owner.',
+          );
+        }
+        await repo.deleteMembership(ctx.workspaceId, userId, tx);
+        await deps.audit.record(tx, {
+          workspaceId: ctx.workspaceId,
+          actorUserId: ctx.userId,
+          action: 'member.removed',
+          entity: { type: 'MEMBERSHIP', id: membership._id },
+          data: { userId, role: membership.role },
+          requestId: ctx.requestId,
+        });
+      });
     },
 
     /** Membership lookup used by `requireMembership` (SEC-004). */

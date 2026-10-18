@@ -61,8 +61,32 @@ export function createWorkspaceRepository(db: Database) {
     ) {
       await memberships(workspaceId).insertOne(doc, { session: tx });
     },
-    findMembership(workspaceId: string, userId: string) {
-      return memberships(workspaceId).findOne({ userId });
+    findMembership(workspaceId: string, userId: string, tx?: TxSession) {
+      return memberships(workspaceId).findOne({ userId }, { session: tx });
+    },
+    /** FR-004 member list, oldest first (index `workspace_user_unique` prefix). */
+    listMemberships(workspaceId: string, limit: number) {
+      return memberships(workspaceId).find({}, { sort: { createdAt: 1, _id: 1 }, limit });
+    },
+    countMemberships(workspaceId: string, tx: TxSession, role?: MembershipDoc['role']) {
+      return memberships(workspaceId).countDocuments(role ? { role } : {}, { session: tx });
+    },
+    deleteMembership(workspaceId: string, userId: string, tx: TxSession) {
+      return memberships(workspaceId).deleteOne({ userId }, { session: tx });
+    },
+    /**
+     * Increments `membershipVersion` inside a membership transaction, so two concurrent membership
+     * changes always write the same document and conflict (MongoDB write conflict → one retries
+     * and re-reads). A counter, not a timestamp: setting an unchanged value is a no-op and would not
+     * conflict. `rowVersion` is not bumped: membership is not a settings change and must not make
+     * an open settings form stale.
+     */
+    bumpMembershipVersion(workspaceId: string, tx: TxSession) {
+      return workspaces(workspaceId).updateOne(
+        {},
+        { $inc: { membershipVersion: 1 } } as UpdateFilter<WorkspaceDoc>,
+        { session: tx },
+      );
     },
     /** Cross-tenant read keyed by the authenticated user (workspace switcher). */
     listMembershipsForUser(userId: string) {

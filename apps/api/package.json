@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:unit": "vitest run src",
     "test:integration": "vitest run test",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "eval:ai": "node --env-file-if-exists=.env --import tsx src/eval-ai.ts"
   },
   "dependencies": {
     "@hono/node-server": "2.1.5",

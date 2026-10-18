@@ -40,6 +40,10 @@ export function hashedContent(changeRequestId: string, v: VersionDoc) {
     confirmedEffortMinutes: v.confirmedEffortMinutes,
     pricing: v.pricing,
     timelineImpact: v.timelineImpact,
+    // Added with the scope check (migration 0006). Omitted while empty so every version hashed
+    // before then keeps exactly the same hash (BR-008); once set they are bound by the decision.
+    questionsForClient: v.questionsForClient?.length ? v.questionsForClient : undefined,
+    scopeVerdict: v.scopeVerdict ?? undefined,
   };
 }
 
@@ -126,12 +130,21 @@ export const DIFF_FIELDS = [
   'assumptions',
   'risks',
   'timelineImpact',
+  'scopeVerdict',
+  'questionsForClient',
 ] as const satisfies readonly (keyof VersionDoc)[];
+
+/** Versions written before migration 0006 lack the scope-check fields; compare them as empty. */
+function diffValue(v: VersionDoc, field: (typeof DIFF_FIELDS)[number]): unknown {
+  if (field === 'questionsForClient') return v.questionsForClient ?? [];
+  if (field === 'scopeVerdict') return v.scopeVerdict ?? null;
+  return v[field];
+}
 
 export function diffVersions(a: VersionDoc, b: VersionDoc) {
   return DIFF_FIELDS.map((field) => {
-    const from = a[field];
-    const to = b[field];
+    const from = diffValue(a, field);
+    const to = diffValue(b, field);
     return {
       field,
       from: toPlain(from),

@@ -24,7 +24,11 @@ import {
   type AuthRateLimits,
   type PasswordHasher,
 } from './modules/identity';
-import { createWorkspaceRoutes, createWorkspaceService } from './modules/workspace';
+import {
+  createWorkspaceRoutes,
+  createWorkspaceService,
+  type WorkspacePorts,
+} from './modules/workspace';
 import { createAiService, createProvider, type ChatModelProvider } from './modules/ai';
 import { createBillingRoutes, createBillingService } from './modules/billing';
 import { createCoreOpsRoutes, createCoreOpsService, type CoreOpsPorts } from './modules/core-ops';
@@ -84,8 +88,12 @@ export function createApp(deps: AppDeps) {
     provider: deps.aiProvider ?? createProvider(config),
     ...(deps.aiSleep ? { sleep: deps.aiSleep } : {}),
   });
-  const workspaces = createWorkspaceService({ db, clock, audit, ai });
+  // Filled once identity exists: identity depends on workspace (registration), never the reverse.
+  const workspacePorts: WorkspacePorts = {};
+  const workspaces = createWorkspaceService({ db, clock, audit, ai, ports: workspacePorts });
   const identity = createIdentityService({ db, clock, config, hasher, workspaces });
+  workspacePorts.findUserByEmail = identity.findUserProfileByEmail;
+  workspacePorts.getUsers = identity.getUserProfiles;
   // Ports are filled after the dependent services exist, so core-ops never imports them.
   const ports: CoreOpsPorts = {};
   const coreOps = createCoreOpsService({ db, clock, audit, workspaces, ports });

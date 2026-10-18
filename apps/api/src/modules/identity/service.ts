@@ -2,6 +2,7 @@ import type {
   loginRequestSchema,
   registerRequestSchema,
   SessionResponse,
+  UserDto,
 } from '@soloops/contracts';
 import type { z } from 'zod';
 import type { AppConfig } from '../../platform/config';
@@ -120,6 +121,20 @@ export function createIdentityService(deps: {
     },
 
     /** AC-001.4: deletes the session server-side. */
+    /**
+     * FR-004 port for the workspace module: the public profile of an existing user (ID, name,
+     * email) — never the password hash. Email is the normalised (lower-case) form.
+     */
+    async findUserProfileByEmail(email: string): Promise<UserDto | null> {
+      const user = await repo.findUserByEmail(email);
+      return user ? toUserDto(user) : null;
+    },
+
+    /** FR-004: public profiles for a list of user IDs (member list). Unknown IDs are skipped. */
+    async getUserProfiles(ids: string[]): Promise<UserDto[]> {
+      return (await repo.findUsersByIds(ids)).map(toUserDto);
+    },
+
     async logout(token: string | undefined): Promise<void> {
       if (token) await repo.deleteSession(hashSessionToken(token));
     },

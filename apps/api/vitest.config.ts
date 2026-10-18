@@ -15,8 +15,9 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts', 'migrations/**/*.ts'],
-      // Process entry points only wire dependencies; they are exercised by the E2E suite.
-      exclude: ['src/**/*.test.ts', 'src/main.ts', 'src/migrate.ts'],
+      // Process entry points only wire dependencies; they are exercised by the E2E suite. The opt-in
+      // real-model evaluation runner (eval-ai.ts) needs a real endpoint and never runs in CI.
+      exclude: ['src/**/*.test.ts', 'src/main.ts', 'src/migrate.ts', 'src/eval-ai.ts'],
       reporter: ['text-summary', 'text', 'html', 'json-summary', 'lcov'],
       reportsDirectory: './coverage',
       thresholds: {

@@ -15,6 +15,8 @@ const ids = {
   taskId: '',
   crId: '',
   entryId: '',
+  /** Workspace A's owner: the most sensitive target for the member routes (FR-004). */
+  userId: '',
   invoiceId: '',
 };
 
@@ -25,6 +27,7 @@ beforeAll(async () => {
   const ws = `/api/v1/workspaces/${a.workspaceId}`;
   const post = async (path: string, body: unknown) =>
     json(await t.request('POST', `${ws}${path}`, { cookie: a.cookie, body }));
+  ids.userId = a.userId;
   ids.clientId = (await post('/clients', { name: 'A client' })).id;
   ids.projectId = (
     await post('/projects', { clientId: ids.clientId, name: 'A project', billingModel: 'HOURLY' })
@@ -255,6 +258,14 @@ const TENANT_ROUTES: {
     path: '/api/v1/workspaces/:workspaceId/ai-enablement',
     body: { enabled: false },
   },
+  // Members (FR-004)
+  { method: 'GET', path: '/api/v1/workspaces/:workspaceId/members' },
+  {
+    method: 'POST',
+    path: '/api/v1/workspaces/:workspaceId/members',
+    body: { email: 'someone@example.com' },
+  },
+  { method: 'DELETE', path: '/api/v1/workspaces/:workspaceId/members/:userId' },
 ];
 
 /** Routes that only an OWNER may call (TC-SEC-03). */
@@ -263,6 +274,8 @@ const OWNER_ONLY_ROUTES = [
   'PUT /api/v1/workspaces/:workspaceId/ai-enablement',
   'POST /api/v1/workspaces/:workspaceId/invoices/:invoiceId/issue',
   'POST /api/v1/workspaces/:workspaceId/invoices/:invoiceId/void',
+  'POST /api/v1/workspaces/:workspaceId/members',
+  'DELETE /api/v1/workspaces/:workspaceId/members/:userId',
 ];
 
 /** Fills `:workspaceId` and every resource placeholder with workspace A's real IDs. */
@@ -273,6 +286,7 @@ const fill = (path: string, workspaceId: string) =>
     .replace(':projectId', ids.projectId)
     .replace(':requirementId', ids.requirementId)
     .replace(':taskId', ids.taskId)
+    .replace(':userId', ids.userId)
     .replace(':crId', ids.crId)
     .replace(':entryId', ids.entryId)
     .replace(':invoiceId', ids.invoiceId)
@@ -439,6 +453,10 @@ describe('SEC-004 workspace isolation', () => {
     const wsDoc = await t.db.raw.collection('workspaces').findOne({ _id: a.workspaceId as never });
     expect(wsDoc?.nextInvoiceNumber).toBe(1);
     expect((await get('')).aiEnabled).toBe(false);
+    // FR-004: no cross-workspace call added or removed a member of A; A's owner is still owner.
+    expect((await get('/members')).items).toEqual([
+      expect.objectContaining({ userId: a.userId, role: 'OWNER' }),
+    ]);
   });
 
   it("a foreign PATCH never changes the other workspace's data", async () => {

@@ -184,3 +184,31 @@ describe('FR-028 diff', () => {
     expect(JSON.stringify(d)).toBeTruthy(); // serialisable (no bigint)
   });
 });
+
+describe('FR-021 scope-check fields and the content hash (BR-008, migration 0006)', () => {
+  it('UT-HASH-SC-01 unset and empty scope-check fields hash exactly like a version written before 0006', () => {
+    const before = versionContentHash('cr', base);
+    expect(versionContentHash('cr', { ...base, questionsForClient: [], scopeVerdict: null })).toBe(
+      before,
+    );
+  });
+
+  it('UT-HASH-SC-02 a confirmed verdict or client questions are bound by the hash', () => {
+    const before = versionContentHash('cr', base);
+    const withVerdict = versionContentHash('cr', { ...base, scopeVerdict: 'NEW_SCOPE' });
+    const withQuestions = versionContentHash('cr', { ...base, questionsForClient: ['SMS too?'] });
+    expect(withVerdict).not.toBe(before);
+    expect(withQuestions).not.toBe(before);
+    expect(versionContentHash('cr', { ...base, scopeVerdict: 'UNCLEAR' })).not.toBe(withVerdict);
+  });
+
+  it('UT-DIFF-SC-01 the diff treats absent fields as empty and reports a changed verdict', () => {
+    const diff = diffVersions(base, { ...base, scopeVerdict: 'CHANGES_AGREED_SCOPE' });
+    expect(diff.find((d) => d.field === 'scopeVerdict')).toMatchObject({
+      from: null,
+      to: 'CHANGES_AGREED_SCOPE',
+      changed: true,
+    });
+    expect(diff.find((d) => d.field === 'questionsForClient')).toMatchObject({ changed: false });
+  });
+});

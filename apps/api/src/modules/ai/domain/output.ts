@@ -41,6 +41,95 @@ export interface MappingWarning {
   message: string;
 }
 
+/** A requirement of the project as the scope check sees it. `agreed` = baselined (BR-004). */
+export interface ScopeRequirement {
+  id: string;
+  key: string;
+  title: string;
+  agreed: boolean;
+}
+
+type ScopeOutput = CrAnalysisOutput['scopeAssessment'];
+type Scope = CrSuggestion['scope'];
+
+/**
+ * The scope check the app stands behind (ai-architecture §4). The model's verdict is kept only
+ * when the evidence supports it; otherwise it becomes `UNCLEAR`, with the reasons in
+ * `adjustments`. Evidence must name a requirement of this project, and only **agreed** requirements
+ * can show agreed scope (`COVERS` / `CHANGES`). Pure and deterministic.
+ */
+export function assessScope(model: ScopeOutput, requirements: readonly ScopeRequirement[]): Scope {
+  const byKey = new Map(requirements.map((r) => [r.key, r]));
+  const adjustments: string[] = [];
+  const evidence: Scope['evidence'] = [];
+  const seen = new Set<string>();
+  for (const e of model.evidence) {
+    if (seen.has(e.requirementKey)) continue;
+    seen.add(e.requirementKey);
+    const req = byKey.get(e.requirementKey);
+    if (!req) {
+      adjustments.push(`${e.requirementKey} does not exist in this project, so it was removed.`);
+      continue;
+    }
+    let relation = e.relation;
+    if (relation !== 'RELATED' && !req.agreed) {
+      adjustments.push(
+        `${req.key} is not agreed (baselined) yet, so it cannot show agreed scope; it is shown as related.`,
+      );
+      relation = 'RELATED';
+    }
+    evidence.push({
+      requirementId: req.id,
+      requirementKey: req.key,
+      requirementTitle: req.title,
+      relation,
+      explanation: e.explanation,
+    });
+  }
+
+  const covers = evidence.some((e) => e.relation === 'COVERS');
+  const changes = evidence.some((e) => e.relation === 'CHANGES');
+  const anyAgreed = requirements.some((r) => r.agreed);
+  let verdict = model.verdict;
+  const unclear = (reason: string) => {
+    if (verdict !== 'UNCLEAR') adjustments.push(reason);
+    verdict = 'UNCLEAR';
+  };
+
+  if (!anyAgreed) {
+    unclear(
+      'No requirements are agreed (baselined) yet, so there is no agreed scope to compare with.',
+    );
+  } else if (!model.baselineSufficient) {
+    unclear('The model reported that the agreed requirements are not enough to decide.');
+  } else if (verdict === 'LIKELY_ALREADY_COVERED' && !covers) {
+    unclear(
+      '"Already covered" was not supported by any agreed requirement that covers the request.',
+    );
+  } else if (verdict === 'LIKELY_ALREADY_COVERED' && changes) {
+    unclear(
+      'The evidence both covers and changes agreed requirements, which contradicts "already covered".',
+    );
+  } else if (verdict === 'CHANGES_AGREED_SCOPE' && !changes) {
+    unclear(
+      '"Changes agreed scope" was not supported by any agreed requirement that the request changes.',
+    );
+  } else if (verdict === 'NEW_SCOPE' && (covers || changes)) {
+    unclear(
+      '"New scope" contradicts evidence that agreed requirements cover or are changed by the request.',
+    );
+  }
+
+  return {
+    verdict,
+    modelVerdict: model.verdict,
+    rationale: model.rationale,
+    baselineSufficient: anyAgreed && model.baselineSufficient,
+    evidence,
+    adjustments,
+  };
+}
+
 const hoursToMinutes = (h: number) => Math.min(120_000, Math.max(1, Math.round(h * 60)));
 
 /**
@@ -49,7 +138,7 @@ const hoursToMinutes = (h: number) => Math.min(120_000, Math.max(1, Math.round(h
  */
 export function mapSuggestion(
   output: CrAnalysisOutput,
-  requirements: readonly { id: string; key: string }[],
+  requirements: readonly ScopeRequirement[],
 ): { suggestion: CrSuggestion; warnings: MappingWarning[] } {
   const byKey = new Map(requirements.map((r) => [r.key, r.id]));
   const keys = [...new Set(output.affectedRequirementKeys)];
@@ -73,14 +162,19 @@ export function mapSuggestion(
       affectedRequirementKeys: known,
       dependencies: output.dependencies,
       assumptions: output.assumptions,
-      effort: {
-        lowMinutes: hoursToMinutes(output.effortHours.low),
-        likelyMinutes: hoursToMinutes(output.effortHours.likely),
-        highMinutes: hoursToMinutes(output.effortHours.high),
-      },
+      // No extra effort (high = 0) → no estimate rather than a zero range (BR-026).
+      effort:
+        output.effortHours.high === 0
+          ? null
+          : {
+              lowMinutes: hoursToMinutes(output.effortHours.low),
+              likelyMinutes: hoursToMinutes(output.effortHours.likely),
+              highMinutes: hoursToMinutes(output.effortHours.high),
+            },
       risks: output.risks,
       timelineImpact: output.timelineImpact,
       questionsForClient: output.questionsForClient,
+      scope: assessScope(output.scopeAssessment, requirements),
     },
     warnings,
   };

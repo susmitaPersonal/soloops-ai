@@ -17,6 +17,8 @@ export interface WorkspaceDoc {
   aiEnabled: boolean;
   aiEnabledAt: Date | null;
   aiEnabledByUserId: string | null;
+  /** FR-004: incremented by every membership change so concurrent changes conflict (0007). */
+  membershipVersion?: number;
   rowVersion: number;
   createdAt: Date;
   updatedAt: Date;

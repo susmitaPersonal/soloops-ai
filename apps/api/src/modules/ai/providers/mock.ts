@@ -48,6 +48,25 @@ export function validSuggestion(
     risks: [{ description: 'Provider approval may take several days', severity: 'MEDIUM' }],
     timelineImpact: 'Likely 2–4 working days',
     questionsForClient: ['Should email login remain available?'],
+    scopeAssessment: requirementKey
+      ? {
+          verdict: 'CHANGES_AGREED_SCOPE',
+          rationale: `The request extends the login described in ${requirementKey}.`,
+          baselineSufficient: true,
+          evidence: [
+            {
+              requirementKey,
+              relation: 'CHANGES',
+              explanation: `${requirementKey} defines the existing login, which this request extends.`,
+            },
+          ],
+        }
+      : {
+          verdict: 'NEW_SCOPE',
+          rationale: 'No recorded requirement describes this request.',
+          baselineSufficient: true,
+          evidence: [],
+        },
     ...extra,
   };
 }

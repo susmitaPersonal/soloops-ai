@@ -169,6 +169,8 @@ describe('migrations (data-model.md §11)', () => {
       '0003-scope-guard-and-ai',
       '0004-delivery-and-billable-work',
       '0005-invoices',
+      '0006-scope-check',
+      '0007-membership-version',
     ]);
     expect(again.changed).toEqual([]);
   });

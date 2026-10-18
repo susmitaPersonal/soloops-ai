@@ -13,7 +13,7 @@ import { createRateLimiter } from '../../platform/http/rate-limit';
 import { newId } from '../../platform/ids';
 import type { Logger } from '../../platform/logging';
 import { mapSuggestion, parseModelText, type MappingWarning } from './domain/output';
-import * as crAnalysisV1 from './prompts/cr-analysis/v1';
+import * as crAnalysis from './prompts/cr-analysis/v2';
 import { ProviderError, type ChatModelProvider } from './providers';
 import type { ProviderHealth } from './providers/types';
 
@@ -50,8 +50,11 @@ export interface AnalyzeInput {
   versionNumber: number;
   projectName: string;
   projectDescription: string;
-  /** Minimised context (SEC-008): keys, titles, short descriptions — nothing else. */
-  requirements: { id: string; key: string; title: string; description: string }[];
+  /**
+   * Minimised context (SEC-008): keys, titles, short descriptions and whether each is agreed
+   * (baselined), so the scope check compares against agreed scope only — nothing else.
+   */
+  requirements: { id: string; key: string; title: string; description: string; agreed: boolean }[];
   requestText: string;
 }
 
@@ -84,7 +87,7 @@ class AnalysisFailure extends Error {
 
 /** Provider-facing JSON schema for `json_schema` structured-output mode (mirrors the Zod schema). */
 const strArr = { type: 'array', items: { type: 'string' } };
-const OUTPUT_JSON_SCHEMA = {
+export const OUTPUT_JSON_SCHEMA = {
   type: 'object',
   required: [
     'clarifiedDescription',
@@ -98,6 +101,7 @@ const OUTPUT_JSON_SCHEMA = {
     'risks',
     'timelineImpact',
     'questionsForClient',
+    'scopeAssessment',
   ],
   properties: {
     clarifiedDescription: { type: 'string' },
@@ -125,6 +129,30 @@ const OUTPUT_JSON_SCHEMA = {
     },
     timelineImpact: { type: 'string' },
     questionsForClient: strArr,
+    scopeAssessment: {
+      type: 'object',
+      required: ['verdict', 'rationale', 'baselineSufficient', 'evidence'],
+      properties: {
+        verdict: {
+          type: 'string',
+          enum: ['NEW_SCOPE', 'CHANGES_AGREED_SCOPE', 'LIKELY_ALREADY_COVERED', 'UNCLEAR'],
+        },
+        rationale: { type: 'string' },
+        baselineSufficient: { type: 'boolean' },
+        evidence: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['requirementKey', 'relation', 'explanation'],
+            properties: {
+              requirementKey: { type: 'string' },
+              relation: { type: 'string', enum: ['COVERS', 'CHANGES', 'RELATED'] },
+              explanation: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
   },
 };
 
@@ -173,7 +201,7 @@ export function createAiService(deps: {
   const generations = (ws: string) => deps.db.tenant<AiGenerationDoc>('aiGenerations', ws);
 
   /** Minimises and truncates the input to AI_MAX_INPUT_CHARS (ai-architecture §6). */
-  function promptInput(input: AnalyzeInput): crAnalysisV1.CrAnalysisPromptInput {
+  function promptInput(input: AnalyzeInput): crAnalysis.CrAnalysisPromptInput {
     const max = config.AI_MAX_INPUT_CHARS;
     const truncated = input.requestText.length > max;
     let budget = Math.max(0, max - Math.min(input.requestText.length, max));
@@ -182,7 +210,7 @@ export function createAiService(deps: {
       const title = r.title.slice(0, 200);
       const description = budget > 400 ? r.description.slice(0, 200) : '';
       budget = Math.max(0, budget - title.length - description.length - 12);
-      return { key: r.key, title, description };
+      return { key: r.key, title, description, agreed: r.agreed };
     });
     return {
       projectName: input.projectName.slice(0, 160),
@@ -202,7 +230,7 @@ export function createAiService(deps: {
     for (let attempt = 0; ; attempt += 1) {
       try {
         const res = await provider.complete({
-          system: crAnalysisV1.system,
+          system: crAnalysis.system,
           user,
           jsonSchema: OUTPUT_JSON_SCHEMA,
           maxOutputTokens: config.AI_MAX_OUTPUT_TOKENS,
@@ -272,7 +300,7 @@ export function createAiService(deps: {
       inFlight.add(lockKey);
 
       const pi = promptInput(input);
-      const user = crAnalysisV1.buildUser(pi);
+      const user = crAnalysis.buildUser(pi);
       const started = Date.now();
       const usage = { inputTokens: 0, outputTokens: 0, model: provider.model ?? provider.id };
       const controller = new AbortController();
@@ -287,7 +315,7 @@ export function createAiService(deps: {
           // Exactly one repair attempt with the validation errors (ai-architecture §6).
           const repaired = parseModelText(
             await callWithRetries(
-              crAnalysisV1.buildRepair(pi, first.errors),
+              crAnalysis.buildRepair(pi, first.errors),
               controller.signal,
               usage,
             ),
@@ -308,7 +336,7 @@ export function createAiService(deps: {
       await generations(input.workspaceId).insertOne({
         _id: generationId,
         feature: 'cr-analysis',
-        promptVersion: crAnalysisV1.id,
+        promptVersion: crAnalysis.id,
         schemaVersion: CR_ANALYSIS_SCHEMA_VERSION,
         provider: provider.id,
         model: usage.model.slice(0, 200),
@@ -319,7 +347,7 @@ export function createAiService(deps: {
         outputTokens: usage.outputTokens || null,
         inputHash: createHash('sha256').update(user, 'utf8').digest('hex'),
         output,
-        prompt: config.AI_STORE_PROMPTS ? { system: crAnalysisV1.system, user } : null,
+        prompt: config.AI_STORE_PROMPTS ? { system: crAnalysis.system, user } : null,
         subject: {
           type: 'CHANGE_REQUEST_VERSION',
           changeRequestId: input.changeRequestId,
@@ -358,7 +386,7 @@ export function createAiService(deps: {
         : mapped.warnings;
       return {
         generationId,
-        promptVersion: crAnalysisV1.id,
+        promptVersion: crAnalysis.id,
         schemaVersion: CR_ANALYSIS_SCHEMA_VERSION,
         provider: provider.id,
         model: usage.model,

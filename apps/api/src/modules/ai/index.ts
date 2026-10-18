@@ -4,3 +4,4 @@ export { createAiService, type AiService, type AnalyzeInput, type AnalyzeResult 
 export { createProvider, noneProvider, ProviderError, type ChatModelProvider } from './providers';
 export { createMockProvider, MOCK_MODEL, validSuggestion } from './providers/mock';
 export { createOpenAiCompatibleProvider } from './providers/openai-compatible';
+export { scoreRuns, THRESHOLDS, type EvalCase, type RunResult } from './eval/score';

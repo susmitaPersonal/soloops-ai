@@ -5,6 +5,7 @@ import {
   type ChangeRequestDto,
   type CrStatus,
   type Decision,
+  type ScopeVerdict,
   type VersionDto,
   type VersionState,
 } from '@soloops/contracts';
@@ -41,6 +42,12 @@ export interface VersionDoc {
   confirmedEffortMinutes: number | null;
   pricing: PricingDoc | null;
   timelineImpact: string;
+  /**
+   * Clarification questions and the person-confirmed scope verdict (FR-021 scope check). Optional:
+   * versions written before migration 0006 lack them and read as `[]` / `null`.
+   */
+  questionsForClient?: string[];
+  scopeVerdict?: ScopeVerdict | null;
   /** Field → AI generation ID (FR-022 provenance). */
   aiFieldProvenance: Record<string, string>;
   contentHash: string | null;
@@ -125,6 +132,8 @@ export function toVersionDto(v: VersionDoc): VersionDto {
         }
       : null,
     timelineImpact: v.timelineImpact,
+    questionsForClient: v.questionsForClient ?? [],
+    scopeVerdict: v.scopeVerdict ?? null,
     aiFieldProvenance: { ...v.aiFieldProvenance },
     contentHash: v.contentHash,
     proposedAt: iso(v.proposedAt),

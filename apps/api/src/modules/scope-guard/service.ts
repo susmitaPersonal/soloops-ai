@@ -69,6 +69,8 @@ function emptyVersion(number: number, title: string, now: Date): VersionDoc {
     confirmedEffortMinutes: null,
     pricing: null,
     timelineImpact: '',
+    questionsForClient: [],
+    scopeVerdict: null,
     aiFieldProvenance: {},
     contentHash: null,
     proposedAt: null,
@@ -388,6 +390,10 @@ export function createScopeGuardService(deps: {
           next.confirmedEffortMinutes = input.confirmedEffortMinutes;
         }
         if (input.timelineImpact !== undefined) next.timelineImpact = input.timelineImpact;
+        if (input.questionsForClient !== undefined) {
+          next.questionsForClient = input.questionsForClient;
+        }
+        if (input.scopeVerdict !== undefined) next.scopeVerdict = input.scopeVerdict;
         const pricingInput =
           input.pricing !== undefined
             ? input.pricing
@@ -806,6 +812,8 @@ export function createScopeGuardService(deps: {
         key: r.key,
         title: r.title,
         description: r.description,
+        // Agreed scope = baselined requirements (BR-004); the scope check compares against these.
+        agreed: r.baselineId !== null,
       }));
       const result = await deps.ai.analyzeChangeRequest({
         workspaceId: ctx.workspaceId,
@@ -821,8 +829,9 @@ export function createScopeGuardService(deps: {
       return {
         ...result,
         // BR-027: indicative cost = minutes × resolved rate, computed here; never from the model.
+        // No estimate (e.g. already covered) → no indicative cost.
         indicativeCost:
-          rate > 0n
+          rate > 0n && e
             ? {
                 currency: project.currency,
                 hourlyRateMinor: rate.toString(),

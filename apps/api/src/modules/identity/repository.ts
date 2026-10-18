@@ -8,6 +8,10 @@ export function createIdentityRepository(db: Database) {
     insertUser: (doc: UserDoc, tx: TxSession) => users.insertOne(doc, { session: tx }),
     findUserByEmail: (email: string) => users.findOne({ email }),
     findUserById: (id: string) => users.findOne({ _id: id }),
+    findUsersByIds: (ids: string[]) =>
+      ids.length === 0
+        ? Promise.resolve([])
+        : users.find({ _id: { $in: ids } }, { limit: ids.length }),
     insertSession: (doc: SessionDoc) => sessions.insertOne(doc),
     findSession: (id: string) => sessions.findOne({ _id: id }),
     touchSession: (id: string, lastSeenAt: Date, expiresAt: Date) =>
