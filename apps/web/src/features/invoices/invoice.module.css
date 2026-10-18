@@ -1,0 +1,58 @@
+/* S-11 invoice: lines table and totals. Tabular numbers; wraps at 360 px (NFR-012). */
+.tableWrap {
+  /* Positioned, so visually hidden header text cannot escape the scroll container. */
+  position: relative;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--so-space-4);
+}
+
+.table th,
+.table td {
+  padding: var(--so-space-2);
+  border-bottom: 1px solid var(--so-border);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.num {
+  text-align: right !important;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.totals {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--so-space-1) var(--so-space-4);
+  margin: var(--so-space-4) 0 0 auto;
+  max-width: 360px;
+}
+
+.totals dt {
+  font-weight: 600;
+}
+
+.totals dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.preLine {
+  white-space: pre-line;
+}
+
+.offending {
+  background: var(--so-warning-bg, transparent);
+}
+
+.totalRow {
+  display: contents;
+}
