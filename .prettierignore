@@ -11,3 +11,5 @@ docs
 next-env.d.ts
 # Pre-existing repo scripts keep their own formatting
 scripts
+# Evaluation datasets are committed byte-for-byte before the logic they test; never reformat them
+apps/api/src/modules/ai/eval/scope-cases-heldout.json
