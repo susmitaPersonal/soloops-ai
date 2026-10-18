@@ -47,6 +47,8 @@ export const apiPaths = {
   projectOverview: (ws: string, projectId: string) =>
     `${tenant(ws)}/projects/${enc(projectId)}/overview`,
   aiEnablement: (ws: string) => `${tenant(ws)}/ai-enablement`,
+  members: (ws: string) => `${tenant(ws)}/members`,
+  member: (ws: string, userId: string) => `${tenant(ws)}/members/${enc(userId)}`,
   invoices: (ws: string) => `${tenant(ws)}/invoices`,
   invoice: (ws: string, invoiceId: string) => `${tenant(ws)}/invoices/${enc(invoiceId)}`,
   invoiceAction: (ws: string, invoiceId: string, action: 'issue' | 'void') =>

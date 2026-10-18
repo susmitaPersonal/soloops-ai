@@ -21,6 +21,8 @@ const version = {
   confirmedEffortMinutes: null,
   pricing: null,
   timelineImpact: '',
+  questionsForClient: [],
+  scopeVerdict: null,
   aiFieldProvenance: {},
   contentHash: null,
   proposedAt: null,

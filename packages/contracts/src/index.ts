@@ -1,6 +1,7 @@
 export * from './common';
 export * from './identity';
 export * from './workspace';
+export * from './members';
 export * from './routes';
 export * from './audit';
 export * from './core-ops';

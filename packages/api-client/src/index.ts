@@ -1,6 +1,10 @@
 import {
   CSRF_HEADER_NAME,
   CSRF_HEADER_VALUE,
+  memberDtoSchema,
+  memberListResponseSchema,
+  type AddMemberRequest,
+  type MemberDto,
   aiStatusSchema,
   analysisResponseSchema,
   apiPaths,
@@ -629,6 +633,16 @@ export function createApiClient(options: ApiClientOptions) {
         (await request('GET', apiPaths.aiStatus(ws), aiStatusSchema)).data,
       setEnablement: async (ws: string, body: AiEnablementRequest): Promise<WorkspaceSettingsDto> =>
         (await request('PUT', apiPaths.aiEnablement(ws), workspaceSettingsDtoSchema, body)).data,
+    },
+    // Members (FR-004)
+    members: {
+      list: async (ws: string): Promise<MemberDto[]> =>
+        (await request('GET', apiPaths.members(ws), memberListResponseSchema)).data.items,
+      add: async (ws: string, body: AddMemberRequest): Promise<MemberDto> =>
+        (await request('POST', apiPaths.members(ws), memberDtoSchema, body)).data,
+      remove: async (ws: string, userId: string): Promise<void> => {
+        await request('DELETE', apiPaths.member(ws, userId), null);
+      },
     },
   };
 }

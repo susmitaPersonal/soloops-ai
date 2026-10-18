@@ -110,11 +110,23 @@ describe('ai contracts', () => {
       risks: [],
       timelineImpact: '',
       questionsForClient: [],
+      scopeAssessment: {
+        verdict: 'NEW_SCOPE',
+        rationale: '',
+        baselineSufficient: true,
+        evidence: [],
+      },
       price: '₹1',
     });
     expect(out).not.toHaveProperty('price');
     expect(
       Object.keys(crAnalysisOutputSchema.shape).some((k) => /price|cost|amount|rate/i.test(k)),
+    ).toBe(false);
+    // The scope assessment (cr-analysis-output@2) carries no money fields either (BR-027).
+    expect(
+      Object.keys(crAnalysisOutputSchema.shape.scopeAssessment.shape).some((k) =>
+        /price|cost|amount|rate/i.test(k),
+      ),
     ).toBe(false);
   });
 

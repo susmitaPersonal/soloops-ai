@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { idSchema, minorUnitsSchema } from './common';
-import { riskSeveritySchema } from './scope-guard';
+import { riskSeveritySchema, scopeVerdictSchema } from './scope-guard';
 
 /**
  * AI contracts (FR-021, FR-050–FR-054; docs/architecture/ai-architecture.md §4).
@@ -14,7 +14,7 @@ const strList = (max = 20) => z.array(text(300)).max(max);
  * `cr-analysis-output@1`: what the model must return. Unknown properties are stripped (z.object
  * strips by default), so price-like or extra fields are discarded (BR-027).
  */
-export const crAnalysisOutputSchema = z.object({
+export const crAnalysisOutputSchemaV1 = z.object({
   clarifiedDescription: text(4000),
   inScope: strList(),
   outOfScope: strList(),
@@ -35,8 +35,50 @@ export const crAnalysisOutputSchema = z.object({
   timelineImpact: z.string().trim().max(500),
   questionsForClient: strList(),
 });
+export const CR_ANALYSIS_SCHEMA_VERSION_V1 = 'cr-analysis-output@1';
+
+/** How one agreed requirement bears on the request: already covers it, is changed by it, or is merely related. */
+export const evidenceRelations = ['COVERS', 'CHANGES', 'RELATED'] as const;
+export const evidenceRelationSchema = z.enum(evidenceRelations);
+export type EvidenceRelation = z.infer<typeof evidenceRelationSchema>;
+
+/**
+ * `cr-analysis-output@2`: `@1` plus a scope assessment against the agreed requirements. Evidence
+ * cites requirement keys only; the server keeps evidence that names a real requirement of the
+ * project and downgrades unsupported verdicts to `UNCLEAR` (ai-architecture §4).
+ */
+export const crAnalysisOutputSchema = crAnalysisOutputSchemaV1.extend({
+  /**
+   * Extra effort in hours. 0 is allowed (an already-covered request needs no extra work); a range
+   * whose high is 0 is mapped to NO estimate, so people never see a zero range (BR-026).
+   */
+  effortHours: z
+    .object({
+      low: z.number().min(0).max(2000),
+      likely: z.number().min(0).max(2000),
+      high: z.number().min(0).max(2000),
+    })
+    .refine((e) => e.low <= e.likely && e.likely <= e.high, {
+      error: 'effortHours must satisfy low ≤ likely ≤ high',
+    }),
+  questionsForClient: strList(10),
+  scopeAssessment: z.object({
+    verdict: scopeVerdictSchema,
+    rationale: z.string().trim().max(600),
+    baselineSufficient: z.boolean(),
+    evidence: z
+      .array(
+        z.object({
+          requirementKey: z.string().regex(/^REQ-\d+$/),
+          relation: evidenceRelationSchema,
+          explanation: text(300),
+        }),
+      )
+      .max(10),
+  }),
+});
 export type CrAnalysisOutput = z.infer<typeof crAnalysisOutputSchema>;
-export const CR_ANALYSIS_SCHEMA_VERSION = 'cr-analysis-output@1';
+export const CR_ANALYSIS_SCHEMA_VERSION = 'cr-analysis-output@2';
 
 /** The suggestion as shown to people: mapped to project IDs and minutes (ai-architecture §4). */
 export const crSuggestionSchema = z.object({
@@ -48,14 +90,38 @@ export const crSuggestionSchema = z.object({
   affectedRequirementKeys: z.array(z.string()),
   dependencies: z.array(z.string()),
   assumptions: z.array(z.string()),
-  effort: z.object({
-    lowMinutes: z.number().int(),
-    likelyMinutes: z.number().int(),
-    highMinutes: z.number().int(),
-  }),
+  /** Null when the model estimated no extra effort (e.g. already covered). */
+  effort: z
+    .object({
+      lowMinutes: z.number().int(),
+      likelyMinutes: z.number().int(),
+      highMinutes: z.number().int(),
+    })
+    .nullable(),
   risks: z.array(z.object({ description: z.string(), severity: riskSeveritySchema })),
   timelineImpact: z.string(),
   questionsForClient: z.array(z.string()),
+  /**
+   * Scope check after server validation. `verdict` is what the app stands behind; `modelVerdict`
+   * is what the model said. They differ when the evidence did not support the model's verdict,
+   * and `adjustments` says why.
+   */
+  scope: z.object({
+    verdict: scopeVerdictSchema,
+    modelVerdict: scopeVerdictSchema,
+    rationale: z.string(),
+    baselineSufficient: z.boolean(),
+    evidence: z.array(
+      z.object({
+        requirementId: idSchema,
+        requirementKey: z.string(),
+        requirementTitle: z.string(),
+        relation: evidenceRelationSchema,
+        explanation: z.string(),
+      }),
+    ),
+    adjustments: z.array(z.string()),
+  }),
 });
 export type CrSuggestion = z.infer<typeof crSuggestionSchema>;
 

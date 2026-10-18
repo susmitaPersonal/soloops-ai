@@ -43,6 +43,19 @@ export type Decision = z.infer<typeof decisionSchema>;
 export const riskSeverities = ['LOW', 'MEDIUM', 'HIGH'] as const;
 export const riskSeveritySchema = z.enum(riskSeverities);
 
+/**
+ * FR-021 scope check: how a client request relates to the **agreed** (baselined) requirements.
+ * Suggested by the AI, then confirmed or corrected by a person and stored on the version.
+ */
+export const scopeVerdicts = [
+  'NEW_SCOPE',
+  'CHANGES_AGREED_SCOPE',
+  'LIKELY_ALREADY_COVERED',
+  'UNCLEAR',
+] as const;
+export const scopeVerdictSchema = z.enum(scopeVerdicts, { error: 'Choose a scope verdict.' });
+export type ScopeVerdict = z.infer<typeof scopeVerdictSchema>;
+
 export const contentHashSchema = z
   .string()
   .regex(/^[0-9a-f]{64}$/, { error: 'Must be a 64-character content hash.' });
@@ -99,6 +112,8 @@ export const aiSuggestableFields = [
   'risks',
   'effort',
   'timelineImpact',
+  'questionsForClient',
+  'scopeVerdict',
 ] as const;
 export const aiSuggestableFieldSchema = z.enum(aiSuggestableFields);
 export type AiSuggestableField = z.infer<typeof aiSuggestableFieldSchema>;
@@ -124,6 +139,10 @@ export const versionContentSchema = z.object({
     .string()
     .trim()
     .max(500, { error: 'Timeline impact must be at most 500 characters.' }),
+  /** Clarification questions for the client, most important first (ambiguity analysis). */
+  questionsForClient: list('Questions for the client'),
+  /** The person-confirmed scope verdict (null until chosen). Part of the approved content. */
+  scopeVerdict: scopeVerdictSchema.nullable(),
 });
 
 /** PATCH a DRAFT version (FR-022). Requires If-Match (the CR rowVersion). */
