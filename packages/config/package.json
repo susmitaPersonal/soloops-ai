@@ -1,0 +1,16 @@
+{
+  "name": "@soloops/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared TypeScript, ESLint (including architecture boundary rules) and Prettier configuration.",
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./eslint": "./eslint/index.js",
+    "./eslint/boundaries": "./eslint/boundaries.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  }
+}
