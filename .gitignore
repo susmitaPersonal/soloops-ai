@@ -1,0 +1,27 @@
+node_modules/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.claude/settings.local.json
+
+# Next.js
+.next/
+next-env.d.ts
+*.tsbuildinfo
+
+# Playwright
+e2e/test-results/
+e2e/playwright-report/
+
+# Machine-specific Docker Compose overrides (e.g. another MongoDB already on 27017)
+docker-compose.override.yml

@@ -1,0 +1,46 @@
+{
+  "name": "soloops-ai",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Open-source operations assistant for freelance software developers and small teams.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "e2e"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,magenta \"npm run dev -w @soloops/api\" \"npm run dev -w @soloops/web\"",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "eslint . --max-warnings=0 && prettier --check .",
+    "format": "prettier --write .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "npm run test:e2e -w @soloops/e2e",
+    "validate": "npm run lint && npm run typecheck && npm test && npm run build && npm run docs:check",
+    "db:migrate": "npm run migrate -w @soloops/api",
+    "docs:check": "node scripts/check-docs.mjs",
+    "design:contrast": "node scripts/check-contrast.mjs",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
+    "test:unit": "npm run test:unit -w @soloops/api && npm test -w @soloops/contracts -w @soloops/api-client -w @soloops/config -w @soloops/web",
+    "test:integration": "npm run test:integration -w @soloops/api",
+    "test:all": "npm test && npm run build && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@soloops/config": "0.0.0",
+    "@types/node": "22.20.5",
+    "@vitest/coverage-v8": "5.0.5",
+    "concurrently": "10.0.6",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "jsdom": "29.1.1",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.2",
+    "vitest": "5.0.5"
+  }
+}
