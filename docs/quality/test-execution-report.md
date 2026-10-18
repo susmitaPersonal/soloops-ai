@@ -1,6 +1,6 @@
 # Test Execution Report
 
-- **Latest results:** the release-closure runs of 2026-10-18 and 2026-10-19 are recorded in [release readiness audit §12–§13](release-readiness-audit.md#13-final-release-closure-2026-10-19). They supersede the counts in this report. Sections §1–§13 below are **historical**, kept as the per-milestone record.
+- **Latest results:** the release-closure runs of 2026-10-18 and 2026-10-19 are recorded in [release readiness audit §12–§13](release-readiness-audit.md#13-final-release-closure-2026-10-19). They supersede the counts in this report. GitHub CI passed on 2026-10-19 (`def722b`, [run](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746)). Sections §1–§13 below are **historical**, kept as the per-milestone record.
 - **Date:** 2026-10-17 (final run, then an independent re-verification pass the same day: §9). **M2 Core Ops results: §10; M3 Scope Guard and AI: §11; M4 Delivery and billable work: §12; M5 Invoices and AI resilience: §13** (each section supersedes the counts before it). **Scope of §1–§9:** milestone M1 code (identity, workspace settings, platform security and data access). **Environment:** Windows 11 Pro, Node 22.14.0, npm 10.9.2, MongoDB 8.2.6 single-node replica set via `mongodb-memory-server` 11.3.0, Playwright 1.64.1 Chromium. Docker daemon **not** running.
 - Related: [testing strategy](testing-strategy.md) · [test cases](test-cases.md) · [traceability](requirements-traceability.md) · [implementation status](implementation-status.md).
 

@@ -2,7 +2,7 @@
 
 Chain: **Requirement → User story → Acceptance criteria → Design/module → API/UI → Test case → Status**.
 
-> **Status values:** `Planned` (designed, not implemented; its test cases are **Blocked**) · `In progress` · `Done` (only when the tests listed **exist and pass**, per the [definition of done](../engineering/definition-of-done.md)). Last updated 2026-10-19. "Done" rows passed locally (`npm run validate`, `npm run test:coverage`, Playwright; latest run in [release readiness audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19)). CI has not run on GitHub yet.
+> **Status values:** `Planned` (designed, not implemented; its test cases are **Blocked**) · `In progress` · `Done` (only when the tests listed **exist and pass**, per the [definition of done](../engineering/definition-of-done.md)). Last updated 2026-10-19. "Done" rows passed locally (`npm run validate`, `npm run test:coverage`, Playwright; latest run in [release readiness audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19)). CI passed on GitHub on 2026-10-19 (`def722b`).
 
 ## Functional requirements
 

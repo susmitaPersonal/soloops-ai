@@ -1,6 +1,6 @@
 # Implementation Status
 
-**Last updated:** 2026-10-19. **Current milestone:** M5 (Invoice drafting and AI resilience) **complete, pending maintainer review**. M1–M4 are also complete. **Release status: NOT READY.** The code is committed locally, but the repository has no remote and GitHub CI has never run (P0). The code itself passes every local check ([release readiness audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19)). **Next milestone:** M6 (MVP hardening).
+**Last updated:** 2026-10-19. **Current milestone:** M5 (Invoice drafting and AI resilience) **complete, pending maintainer review**. M1–M4 are also complete. **Release status: not yet release-ready (one manual check open).** The code is published at https://github.com/susmitaPersonal/soloops-ai, and both CI jobs passed on `def722b` ([run](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746)). The development server and browser run is still to be done ([release readiness audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19)). **Next milestone:** M6 (MVP hardening).
 
 > This report reflects **implemented and tested code only**. Documentation does not count as implementation. Every "Done" below has passing tests quoted in the [validation log](#validation-log).
 
@@ -9,7 +9,7 @@
 | Area | Status |
 | --- | --- |
 | Documentation foundation, Claude Code skills (8) and agents (6) | Done (M0) |
-| Monorepo, tooling, CI workflow, Docker Compose | Done (M1). Docker Compose MongoDB verified locally on 2026-10-18 (release audit §11). CI workflow written but **not yet run on GitHub**: the code is committed locally, with no remote yet |
+| Monorepo, tooling, CI workflow, Docker Compose | Done (M1). Docker Compose MongoDB verified locally on 2026-10-18 (release audit §11). CI passed on GitHub on 2026-10-19: both jobs, `def722b` ([run](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746)) |
 | Identity and workspace (FR-001, FR-002, FR-003, FR-005) | Done (M1) |
 | Platform security controls (SEC-001–007, SEC-010, SEC-011 for settings) | Done for M1 endpoints |
 | Core Ops: clients, projects, requirements, baselines, tasks (FR-010–FR-014, BR-004/005/015/029) | Done (M2; task links to approved change-request versions M4) |
@@ -146,7 +146,7 @@ Residual risks are recorded in [known limitations](known-limitations.md#implemen
 
 The current list, with exact commands, is in [release readiness audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19). In short:
 
-1. **P0:** Maintainer reviews the 29 local commits and the release-closure changes. Then: create an empty GitHub repository, add it as `origin`, push `main`, and confirm both CI jobs (`validate`, `docker-mongodb`) pass. Record the run URL in the release audit.
+1. **Done 2026-10-19:** published to https://github.com/susmitaPersonal/soloops-ai. Both CI jobs (`validate`, `docker-mongodb`) passed on `def722b` ([run](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746)). A maintainer review of the commits is not formally documented.
 2. **P1:** A person runs `npm run dev` against a dedicated database and completes the browser journey from change request to invoice. Record the result in the release audit.
 3. Build FR-004 member management, then unblock E2E-WF-13.
 4. Build the AI evaluation harness (ai-architecture §7) before recommending any model. The real-endpoint integration is smoke-tested only.
@@ -190,5 +190,6 @@ Record every validation run here with its exact command and actual result.
 | 2026-10-18 (release sprint) | `npm run validate`, `npm run test:coverage`, Playwright (in-memory and Docker MongoDB), API suite on Docker MongoDB, real-model UI check | Vitest 1051 passed; coverage gates met; E2E 33 passed / 1 skipped in both modes; API 746/746 on Docker; Ollama `qwen2.5:1.5b`: 4/4 schema-valid with `json_schema`, 1/4 with `prompt` (safe fallback). Details: [release audit §12](release-readiness-audit.md#12-release-closure-sprint-2026-10-18) |
 | 2026-10-19 (independent audit) | Fresh `git clone` of `89cdc6c`, then `npm ci`, `npm run validate`, `npm run test:coverage`; shuffled API run (`--sequence.shuffle`, seed 20261019); real-model check through the AI service (Ollama `qwen2.5:1.5b`) | All exit 0: Vitest 1051 passed; shuffled API run 746/746; AI 3/3 `json_schema`, 3/3 `prompt`, outage → 502 with a FAILED record. Details: [release audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19) |
 | 2026-10-19 (release closure) | `npm run lint`, `typecheck`, `test:coverage`, `build`, `design:contrast`, `npm audit`, `test:e2e`, plus a mutation check of the new home-page assertion | All exit 0 after one E2E test-locator fix: Vitest 1051 passed; E2E 33 passed, 1 skipped; the assertion fails on the old home-page copy. Details: [release audit §13.4](release-readiness-audit.md#134-validation-run-after-these-changes) |
+| 2026-10-19 (GitHub CI) | First GitHub Actions run on `main` (`def722b`) | `validate` success, `docker-mongodb` success ([run](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746)) |
 | 2026-10-16 (M1) | `docker compose up -d mongo` | **Not run**: Docker daemon not running on this machine |
 | 2026-10-16 (M1) | CI on GitHub | **Not run**: nothing committed or pushed yet |

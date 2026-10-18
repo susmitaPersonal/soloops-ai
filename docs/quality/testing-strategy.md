@@ -92,6 +92,6 @@ Deterministic AI tests (CI) and model-quality evaluation (manual) are **separate
 
 ## 9. Known gaps in the test system
 
-- CI has not run on GitHub yet: the repository has no remote ([release audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19)). The Docker Compose database path (`MONGODB_URI_TEST`, `E2E_MONGODB_URI`) was exercised once, locally on Windows on 2026-10-18 (release audit §11, §12.3). It has not been exercised on Linux; the CI `docker-mongodb` job covers that once CI runs.
+- CI passed on GitHub on 2026-10-19 (`def722b`, both jobs, [run](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746)). That includes the Docker Compose database path (`MONGODB_URI_TEST`, `E2E_MONGODB_URI`) on Linux in the `docker-mongodb` job. Locally it was exercised on Windows on 2026-10-18 (release audit §11, §12.3).
 - E2E runs Chromium only, desktop plus a Pixel 7 profile. Firefox and WebKit projects (NFR-011) are not configured yet.
 - No load or performance tests (NFR-004 is planned for M6).

@@ -4,7 +4,7 @@
 
 ## 1. Overall status
 
-> **Current status (2026-10-19): NOT READY. One P0 is open:** the repository has no remote, so GitHub CI has never run and reviewers cannot reach the code. Every local check passes, and no code defect blocks release. See [§13](#13-final-release-closure-2026-10-19).
+> **Current status (2026-10-19): not yet release-ready; one manual check is open.** The P0 is closed: the code is public at https://github.com/susmitaPersonal/soloops-ai, and both GitHub CI jobs passed on `def722b` ([run 39159239746](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746)). The development server and browser run is still to be done. No code defect blocks release. See [§13](#13-final-release-closure-2026-10-19).
 >
 > **Sections §1–§12 are historical** records of earlier passes on 2026-10-18. Where they disagree with §13, §13 is current. The §12.1 verdict "READY WITH LIMITATIONS" is superseded.
 
@@ -286,25 +286,25 @@ Run after the last edit of this sprint: `npx prettier --check .` exit 0; `npm ru
 
 ## 13. Final release closure (2026-10-19)
 
-### 13.1 Status: NOT READY (one P0 open)
+### 13.1 Status: not yet release-ready (one manual check open)
 
-- **P0, open: the repository is not published.** There is no Git remote, so GitHub Actions has never run and reviewers cannot reach the code. This needs a maintainer decision on the destination; it is not done by an agent. Steps: [§13.6](#136-remaining-steps-and-owners).
+- **P0, closed on 2026-10-19:** published to https://github.com/susmitaPersonal/soloops-ai. Both CI jobs (`validate`, `docker-mongodb`) passed on `def722b` ([run 39159239746](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746)).
 - **Code readiness: no release-blocking defect is known.**
   - An independent audit on 2026-10-18/19 (247 checklist items, three reviewer agents) found no security, approval-integrity or financial-correctness defect.
   - Every local check passes on the working tree ([§13.4](#134-validation-run-after-these-changes)).
   - On 2026-10-19 a fresh `git clone` of commit `89cdc6c` passed `npm ci`, `npm run validate` and `npm run test:coverage`.
 - **Still to verify by a person:**
-  - maintainer review of the commits;
   - `npm run dev` with the browser journey from change request to invoice;
-  - a run on Linux or macOS.
+  - (Linux is covered by CI on `ubuntu-latest`; macOS has not been run.)
 
   §13.6 lists the steps.
-- **Do not call this READY** until the P0 is closed: both CI jobs green on GitHub, with the run URL recorded below.
+- **Maintainer review** of the commits is **not formally documented**: there is no written review record.
+- **Do not call this READY WITH LIMITATIONS** until the manual browser run succeeds and is recorded in §13.6.
 
 ### 13.2 Repository state
 
 - Branch `main`, 29 commits (`0960506` … `89cdc6c`), all created on 2026-10-18 between 23:56:36 and 23:56:39 +0530 by a Claude Code session with the maintainer's Git identity. **No maintainer review is recorded.**
-- No remote, no stash. Before this closure the working tree was clean. The changes in §13.3 are **uncommitted**, left for maintainer review.
+- The §13.3 changes were committed in six commits (`d5923c1` … `bc08c95`). The remote is `origin` = https://github.com/susmitaPersonal/soloops-ai.git. GitHub created the repository with its own LICENSE commit (`d97a9cf`); it was merged, not overwritten, and the project's LICENSE wording was kept (`def722b`). `main` was pushed on 2026-10-19.
 - **Secrets and hygiene, checked 2026-10-19:**
   - The only env files tracked are `apps/api/.env.example` and `apps/web/.env.example`, and their `SESSION_SECRET` and `AI_API_KEY` are empty.
   - A secret-pattern scan of every tracked and changed file (private keys, AWS, OpenAI-style, GitHub, Slack and Google keys, credentialed MongoDB URIs) found one hit: the deliberate fake values in the log-redaction test `apps/api/test/platform.test.ts:313-314`.
@@ -359,14 +359,16 @@ Ollama was stopped afterwards.
 | AI integration | ✅ Advisory and off by default. Real path smoke-tested on one small local model; **quality not evaluated** |
 | Automated tests, build, dependencies, licence | ✅ Locally, including a fresh clone (Windows 11) |
 | Documentation | ✅ Reconciled in §13.3; docs check result in §13.4 |
-| **GitHub publication and CI** | ❌ **P0 open:** no remote, never run |
-| Maintainer review of the commits | ⬜ Not done |
+| GitHub publication and CI | ✅ Published; both jobs passed on `def722b` ([run 39159239746](https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746)) |
+| Maintainer review of the commits | ⬜ Not formally documented |
 | `npm run dev` and the manual browser journey | ⬜ Not done |
-| Linux or macOS | ⬜ Not done (CI on `ubuntu-latest` will cover the automated part) |
+| Linux or macOS | ✅ Linux: automated suites passed in CI (`ubuntu-latest`). macOS: not run |
 
 ### 13.6 Remaining steps and owners
 
-Every step below is for the **maintainer**. None was performed by the agent. Commands are for Git Bash or any POSIX shell. Replace `OWNER` with your GitHub user or organisation.
+*Update 2026-10-19:* steps 1–5 are done. In step 2, GitHub created the repository with a LICENSE commit, which was merged rather than overwritten; in step 4, the maintainer pushed. Steps 6–7 (the manual run) remain.
+
+Every step below is for the **maintainer**. Commands are for Git Bash or any POSIX shell. Replace `OWNER` with your GitHub user or organisation.
 
 **Step 1: Review and commit the closure changes (local only).**
 
@@ -444,11 +446,11 @@ npm run dev                                 # web http://localhost:3000, API :40
 
 | Date | Item | Result | Evidence |
 | --- | --- | --- | --- |
-| *pending* | GitHub Actions run on `main` (both jobs) | *pending* | *run URL* |
+| 2026-10-19 | GitHub Actions run on `main` (both jobs) | ✅ `validate` success, `docker-mongodb` success, on `def722b` | https://github.com/susmitaPersonal/soloops-ai/actions/runs/39159239746 |
 | *pending* | `npm run dev` and browser journey (step 7) | *pending* | *OS, browser, invoice number and total observed* |
-| *pending* | Maintainer review of the 29 commits and the closure changes | *pending* | *reviewer* |
+| — | Maintainer review of the 29 commits and the closure changes | Not formally documented | No written review record. The maintainer authorised the push |
 
-Only when the first row is green, with both jobs successful, may §13.1 change to **READY WITH LIMITATIONS**. The limitations that remain then:
+Only when the manual run row (step 7) succeeds may §13.1 change to **READY WITH LIMITATIONS**. The limitations that remain then:
 
 - no member management (FR-004; E2E-WF-13 stays `fixme`);
 - invoices are not GST-compliant tax invoices;
