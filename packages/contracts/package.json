@@ -1,0 +1,18 @@
+{
+  "name": "@soloops/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Isomorphic Zod schemas, DTO types, enums, problem codes and route paths shared by web and API (ADR-0011).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  }
+}
