@@ -1,6 +1,6 @@
 # API Design
 
-> **Status:** Proposed. **Implemented in M1:** `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/me`, `GET`/`PATCH {ws}`, `/healthz`, `/readyz`. **Implemented in M2:** every Core Ops endpoint below except `…/overview` (FR-015). Implementation choices: [ADR-0017](adr/0017-m2-core-ops-implementation-choices.md). **Implemented in M3:** every Scope Guard endpoint below except `…/versions/{n}/tasks` (FR-030), plus `GET {ws}/ai/status` and `PUT {ws}/ai-enablement` ([ADR-0018](adr/0018-m3-scope-guard-and-ai-implementation-choices.md)). **Implemented in M4:** `…/versions/{n}/tasks` (FR-030), `…/billable-entries` (GET, POST, and GET / PATCH / DELETE by ID) and `…/overview` (FR-015) ([ADR-0019](adr/0019-m4-delivery-and-billable-work-implementation-choices.md)). **Implemented in M5:** every `{ws}/invoices` endpoint below ([ADR-0020](adr/0020-m5-invoice-implementation-choices.md)). `Idempotency-Key` is processed on decisions, invoice issue and void (**required**), and on propose, withdraw, new version, conversion to tasks, entry creation and invoice drafts (optional). Their request and response shapes live in `packages/contracts`. Once implemented, an OpenAPI 3.1 document will be **generated from the Zod schemas** (generator chosen in M1, see [ADR-0010](adr/0010-hono-api-on-node.md)) and served at `/api/v1/openapi.json`. That generated spec then becomes authoritative for request and response shapes, and this document covers conventions and the inventory.
+> **Status:** Implemented for every route below **except** the rows marked *Planned (not built)*. **Implemented in M1:** `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/me`, `GET`/`PATCH {ws}`, `/healthz`, `/readyz`. **Implemented in M2:** every Core Ops endpoint below except `…/overview` (FR-015). Implementation choices: [ADR-0017](adr/0017-m2-core-ops-implementation-choices.md). **Implemented in M3:** every Scope Guard endpoint below except `…/versions/{n}/tasks` (FR-030), plus `GET {ws}/ai/status` and `PUT {ws}/ai-enablement` ([ADR-0018](adr/0018-m3-scope-guard-and-ai-implementation-choices.md)). **Implemented in M4:** `…/versions/{n}/tasks` (FR-030), `…/billable-entries` (GET, POST, and GET / PATCH / DELETE by ID) and `…/overview` (FR-015) ([ADR-0019](adr/0019-m4-delivery-and-billable-work-implementation-choices.md)). **Implemented in M5:** every `{ws}/invoices` endpoint below ([ADR-0020](adr/0020-m5-invoice-implementation-choices.md)). `Idempotency-Key` is processed on decisions, invoice issue and void (**required**), and on propose, withdraw, new version, conversion to tasks, entry creation and invoice drafts (optional). Their request and response shapes live in `packages/contracts`. **There is no OpenAPI document** in the MVP release ([ADR-0021](adr/0021-openapi-deferred-beyond-mvp.md), amending [ADR-0010](adr/0010-hono-api-on-node.md)): this document covers conventions and the route inventory, and the Zod schemas in `packages/contracts` are authoritative for request and response shapes.
 
 ## 1. Conventions
 
@@ -61,8 +61,8 @@ Unless stated otherwise, paths are relative to `/api/v1`, and `{ws}` means `/wor
 | GET | `/auth/me` | session | | FR-002 |
 | GET / PATCH | `{ws}` (settings) | M / O | | FR-005 |
 | PUT | `{ws}/ai-enablement` | O | | FR-054 |
-| GET / POST | `{ws}/members` | M / O | | FR-004 |
-| DELETE | `{ws}/members/{userId}` | O | | FR-004 |
+| GET / POST | `{ws}/members` *Planned (not built)* | M / O | | FR-004 |
+| DELETE | `{ws}/members/{userId}` *Planned (not built)* | O | | FR-004 |
 
 ### Core Ops
 | Method | Path | Auth | Idem | Req |
@@ -87,7 +87,7 @@ Unless stated otherwise, paths are relative to `/api/v1`, and `{ws}` means `/wor
 | GET | `{ws}/change-requests` (`?status=AWAITING_DECISION,NEEDS_REVISION&projectId=&cursor=`), the workspace-wide approvals queue | M | | FR-032 |
 | GET | `{ws}/change-requests/{crId}` (CR, versions, decisions) | M | | FR-028 |
 | POST | `{ws}/change-requests/{crId}/versions` (new draft) | M | ✓ | FR-026 |
-| GET / PATCH | `{ws}/change-requests/{crId}/versions/{n}` | M | | FR-022 |
+| PATCH | `{ws}/change-requests/{crId}/versions/{n}` (draft only; versions are read through `GET {ws}/change-requests/{crId}`) | M | | FR-022 |
 | DELETE | `{ws}/change-requests/{crId}/versions/{n}` (never-proposed draft only) | M | | FR-022 |
 | POST | `{ws}/change-requests/{crId}/versions/{n}/analyze` | M | ✓ | FR-021 |
 | POST | `{ws}/change-requests/{crId}/versions/{n}/propose` | M | ✓ | FR-024 |
@@ -110,10 +110,10 @@ Unless stated otherwise, paths are relative to `/api/v1`, and `{ws}` means `/wor
 ### AI, audit, community, ops
 | Method | Path | Auth | Req |
 | --- | --- | --- | --- |
-| GET | `{ws}/dashboard` (read-only summary: awaiting decisions, recent decisions, eligible unbilled per project, draft invoices, ineligible counts, setup checklist) | M | FR-017 |
+| GET | `{ws}/dashboard` *Planned (not built)* (read-only summary: awaiting decisions, recent decisions, eligible unbilled per project, draft invoices, ineligible counts, setup checklist) | M | FR-017 |
 | GET | `{ws}/ai/status` | M | FR-053 |
-| GET | `{ws}/audit-events?entityType=&entityId=` | M | FR-016 |
-| GET | `{ws}/export` | O | FR-061 |
+| GET | `{ws}/audit-events?entityType=&entityId=` *Planned (not built)* | M | FR-016 |
+| GET | `{ws}/export` *Planned (not built)* | O | FR-061 |
 | GET | `/healthz`, `/readyz` (outside `/api/v1`) | public | NFR-010 |
 
 ## 5. Rate limits (initial values, tune after measurement)

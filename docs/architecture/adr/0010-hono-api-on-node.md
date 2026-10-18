@@ -1,6 +1,6 @@
 # ADR-0010: Hono API on Node.js
 
-- **Status:** Accepted (stack directed by the maintainer)
+- **Status:** Accepted (stack directed by the maintainer). OpenAPI clause amended by [ADR-0021](0021-openapi-deferred-beyond-mvp.md): no OpenAPI document ships in the MVP release.
 - **Date:** 2026-10-16
 - **Supersedes:** the API part of [ADR-0001](0001-technology-stack.md)
 - **Related:** ADR-0003 (modular monolith, still in force), ADR-0011, ADR-0012
