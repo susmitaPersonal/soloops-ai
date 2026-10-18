@@ -6,8 +6,8 @@ import styles from './page.module.css';
 export const metadata: Metadata = { title: 'Home' };
 
 /**
- * Workspace home. The S-14 dashboard (FR-017) replaces this once change requests and billing
- * exist (M3–M5). Only implemented capabilities are listed.
+ * Workspace home: the getting-started path through the implemented workflow (M1–M5). The S-14
+ * dashboard (FR-017, not built) will replace it. Only implemented capabilities are listed.
  */
 export default async function WorkspaceHome({
   params,
@@ -50,10 +50,20 @@ export default async function WorkspaceHome({
             Record the project&apos;s requirements and baseline them as the agreed original scope.
           </li>
           <li>Plan the work as tasks linked to baselined requirements.</li>
+          <li>
+            When the client asks for more, record a change request in the project, propose it, and
+            record the client&apos;s decision. Proposals waiting for a decision are listed under{' '}
+            <Link href={`/w/${workspaceId}/approvals`}>Approvals</Link>.
+          </li>
+          <li>Turn an approved change request into tasks, and log the work you deliver.</li>
+          <li>
+            Draft an invoice from eligible work in{' '}
+            <Link href={`/w/${workspaceId}/billing`}>Billing</Link>.
+          </li>
         </ol>
         <p className={styles.note}>
-          Change requests, client approvals and invoices are not available yet. They arrive in the
-          next milestones.
+          Only baselined requirements and approved change requests can be invoiced. Work on pending,
+          rejected or withdrawn proposals stays unbilled.
         </p>
       </section>
     </div>

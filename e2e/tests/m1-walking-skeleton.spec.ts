@@ -44,6 +44,21 @@ test('M1 journey: register → settings saved → sign out → protected redirec
   await page.waitForURL(`**/w/${workspaceId}/settings`);
   await expect(page.getByLabel(/Tax label/)).toHaveValue('GST');
 
+  // Workspace home describes the implemented workflow through invoices; it once claimed change
+  // requests, approvals and invoices were "not available yet" (release-readiness-audit §13).
+  await page.goto(`/w/${workspaceId}`);
+  const gettingStarted = page.getByRole('region', { name: 'Getting started' });
+  await expect(gettingStarted).toContainText('record a change request');
+  await expect(
+    gettingStarted.getByRole('link', { name: 'Approvals', exact: true }),
+  ).toHaveAttribute('href', `/w/${workspaceId}/approvals`);
+  await expect(gettingStarted.getByRole('link', { name: 'Billing', exact: true })).toHaveAttribute(
+    'href',
+    `/w/${workspaceId}/billing`,
+  );
+  await expect(gettingStarted).toContainText('Only baselined requirements and approved change');
+  await expect(gettingStarted).not.toContainText('not available yet');
+
   expect(csp, 'CSP violations').toEqual([]);
 });
 
