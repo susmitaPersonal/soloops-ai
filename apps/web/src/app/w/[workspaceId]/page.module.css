@@ -1,0 +1,35 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--so-space-6);
+}
+
+.title {
+  font-size: 24px;
+  line-height: 32px;
+  overflow-wrap: anywhere;
+}
+
+.card {
+  padding: var(--so-space-5);
+  background: var(--so-surface);
+  border: 1px solid var(--so-border);
+  border-radius: var(--so-radius-lg);
+  box-shadow: var(--so-shadow-sm);
+}
+
+.cardTitle {
+  font-size: 18px;
+  line-height: 28px;
+  margin-bottom: var(--so-space-3);
+}
+
+.steps {
+  margin: 0 0 var(--so-space-4);
+  padding-left: var(--so-space-6);
+}
+
+.note {
+  margin: 0;
+  color: var(--so-text-muted);
+}

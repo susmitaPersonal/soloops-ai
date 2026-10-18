@@ -1,0 +1,25 @@
+.summary {
+  padding: var(--so-space-4);
+  border: 2px solid var(--so-error-fg);
+  border-radius: var(--so-radius-lg);
+  background: var(--so-error-bg);
+  color: var(--so-error-fg);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--so-space-2);
+  margin: 0 0 var(--so-space-2);
+  font-weight: 600;
+}
+
+.list {
+  margin: 0;
+  padding-left: var(--so-space-6);
+}
+
+.list a {
+  color: inherit;
+  font-weight: 500;
+}

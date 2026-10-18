@@ -1,0 +1,21 @@
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--so-space-4);
+}
+
+.bar,
+.block {
+  border-radius: var(--so-radius-md);
+  background: var(--so-surface-muted);
+}
+
+.bar {
+  width: 40%;
+  height: 32px;
+}
+
+.block {
+  width: 100%;
+  height: 240px;
+}

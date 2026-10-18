@@ -1,0 +1,139 @@
+.shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--so-space-6);
+  padding: var(--so-space-5) var(--so-space-4);
+  background: var(--so-surface);
+  border-right: 1px solid var(--so-border);
+}
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.workspaceLabel {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--so-text-subtle);
+}
+
+.workspaceName {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  color: var(--so-text-subtle);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--so-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: var(--so-space-3);
+  min-height: 40px;
+  padding: 0 var(--so-space-3);
+  border-radius: var(--so-radius-md);
+  color: var(--so-text);
+  text-decoration: none;
+}
+
+.navLink:hover {
+  background: var(--so-surface-muted);
+}
+
+.navLinkCurrent {
+  background: var(--so-primary-subtle);
+  color: var(--so-on-primary-subtle);
+  font-weight: 600;
+}
+
+.user {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--so-space-2);
+}
+
+.main {
+  padding: var(--so-space-6);
+  max-width: 1200px;
+  width: 100%;
+  min-width: 0;
+}
+
+.main:focus {
+  outline: none;
+}
+
+/* < 1024 px: the sidebar becomes a top bar (a focus-trapped drawer is planned with the full nav, M2). */
+@media (max-width: 1023px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--so-space-4);
+    border-right: 0;
+    border-bottom: 1px solid var(--so-border);
+  }
+
+  .nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .user {
+    margin-top: 0;
+    margin-left: auto;
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+@media (max-width: 599px) {
+  .main {
+    padding: var(--so-space-4);
+  }
+
+  .user .meta {
+    display: none;
+  }
+}
+
+/* Printable pages (S-08 summary, S-11 invoice): only the main content is printed. */
+@media print {
+  .shell {
+    display: block;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .main {
+    padding: 0;
+  }
+}

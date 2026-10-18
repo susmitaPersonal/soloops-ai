@@ -1,0 +1,33 @@
+.page {
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--so-space-12) var(--so-space-4);
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  align-self: flex-start;
+  padding: var(--so-space-8) var(--so-space-6);
+  background: var(--so-surface);
+  border: 1px solid var(--so-border);
+  border-radius: var(--so-radius-xl);
+  box-shadow: var(--so-shadow-sm);
+}
+
+.brand {
+  margin: 0 0 var(--so-space-6);
+  font-weight: 700;
+  color: var(--so-primary);
+}
+
+@media (max-width: 599px) {
+  .page {
+    padding: var(--so-space-6) var(--so-space-4);
+  }
+
+  .card {
+    padding: var(--so-space-6) var(--so-space-4);
+  }
+}
