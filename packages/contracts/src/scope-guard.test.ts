@@ -114,7 +114,7 @@ describe('ai contracts', () => {
         verdict: 'NEW_SCOPE',
         rationale: '',
         baselineSufficient: true,
-        evidence: [],
+        asks: [{ quote: 'q', citations: [], price: '₹2' }],
       },
       price: '₹1',
     });
@@ -122,7 +122,13 @@ describe('ai contracts', () => {
     expect(
       Object.keys(crAnalysisOutputSchema.shape).some((k) => /price|cost|amount|rate/i.test(k)),
     ).toBe(false);
-    // The scope assessment (cr-analysis-output@2) carries no money fields either (BR-027).
+    expect(out.scopeAssessment.asks[0]).not.toHaveProperty('price');
+    // The scope assessment, its asks and citations (cr-analysis-output@3) carry no money fields
+    // either (BR-027).
+    const ask = crAnalysisOutputSchema.shape.scopeAssessment.shape.asks.element;
+    for (const shape of [ask.shape, ask.shape.citations.element.shape]) {
+      expect(Object.keys(shape).some((k) => /price|cost|amount|rate/i.test(k))).toBe(false);
+    }
     expect(
       Object.keys(crAnalysisOutputSchema.shape.scopeAssessment.shape).some((k) =>
         /price|cost|amount|rate/i.test(k),
