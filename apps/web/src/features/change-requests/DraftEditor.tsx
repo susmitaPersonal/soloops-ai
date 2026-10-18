@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   riskSeverities,
+  scopeVerdicts,
   type AnalysisResponse,
   type ChangeRequestDetail,
   type RequirementDto,
@@ -24,6 +25,7 @@ import { BannerAlert } from '@/features/core-ops/BannerAlert';
 import styles from '@/features/core-ops/core-ops.module.css';
 import { bannerForError, type Banner } from '@/features/core-ops/mutation-errors';
 import { AiSuggestionPanel, type SuggestionField } from './AiSuggestionPanel';
+import { SCOPE_VERDICT } from './cr-labels';
 import {
   draftFieldFor,
   joinLines,
@@ -55,6 +57,8 @@ const IDS: Record<keyof DraftFormInput, string> = {
   pricingMode: 'draft-pricing',
   fixedPrice: 'draft-fixed-price',
   affectedRequirementIds: 'draft-affected',
+  scopeVerdict: 'draft-scope-verdict',
+  questionsForClient: 'draft-questions',
 };
 
 /**
@@ -135,7 +139,12 @@ export function DraftEditor({
     for (const f of fields) {
       if (f === 'risks') setRisks(s.risks);
       else if (f === 'affectedRequirementIds') setAffected(s.affectedRequirementIds);
-      else if (f === 'effort') {
+      else if (f === 'scopeVerdict') {
+        // The server-checked verdict, never the raw model verdict (FR-021).
+        setValue('scopeVerdict', s.scope.verdict, { shouldDirty: true });
+      } else if (f === 'effort') {
+        // No extra effort estimated (e.g. already covered): nothing to apply, no badge.
+        if (!s.effort) continue;
         setValue('effortLow', minutesToHours(s.effort.lowMinutes), { shouldDirty: true });
         setValue('effortLikely', minutesToHours(s.effort.likelyMinutes), { shouldDirty: true });
         setValue('effortHigh', minutesToHours(s.effort.highMinutes), { shouldDirty: true });
@@ -221,6 +230,30 @@ export function DraftEditor({
           </Alert>
         ) : null}
         <TextField label="Title" {...field('title')} />
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.rowTitle}>Scope</legend>
+          <div className={styles.group}>
+            {aiBadge('scopeVerdict')}
+            <SelectField
+              label="Scope verdict"
+              hint="Confirm or correct the AI scope check. The client approves it with the proposal."
+              options={[
+                { value: '', label: 'Not decided yet' },
+                ...scopeVerdicts.map((v) => ({ value: v, label: SCOPE_VERDICT[v].label })),
+              ]}
+              {...field('scopeVerdict')}
+            />
+          </div>
+          <div className={styles.group}>
+            {aiBadge('questionsForClient')}
+            <TextArea
+              label="Questions for the client"
+              hint="One per line, most important first. Shown on the proposal for the client."
+              rows={3}
+              {...field('questionsForClient')}
+            />
+          </div>
+        </fieldset>
         <div className={styles.group}>
           {aiBadge('clarifiedDescription')}
           <TextArea label="Clarified description" rows={4} {...field('clarifiedDescription')} />

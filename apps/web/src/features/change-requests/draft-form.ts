@@ -1,6 +1,7 @@
 import {
   decimalToMinorUnits,
   minorUnitsToDecimal,
+  scopeVerdicts,
   type CrSuggestion,
   type UpdateVersionRequest,
   type VersionDto,
@@ -57,6 +58,9 @@ export const makeDraftFormSchema = (currency: string) =>
       pricingMode: z.enum(['', 'TIME', 'FIXED']),
       fixedPrice: z.string(),
       affectedRequirementIds: z.array(z.string()),
+      questionsForClient: listField,
+      /** '' = not decided yet. A person confirms the verdict; the AI only suggests it. */
+      scopeVerdict: z.enum(['', ...scopeVerdicts]),
     })
     .superRefine((v, ctx) => {
       for (const f of [
@@ -65,6 +69,7 @@ export const makeDraftFormSchema = (currency: string) =>
         'acceptanceCriteria',
         'dependencies',
         'assumptions',
+        'questionsForClient',
       ] as const) {
         const l = lines(v[f]);
         if (l.length > 20)
@@ -143,6 +148,8 @@ export function toDraftFormValues(v: VersionDto, currency: string): DraftFormInp
         ? minorUnitsToDecimal(v.pricing.priceMinor, fractionDigits(currency))
         : '',
     affectedRequirementIds: [...v.affectedRequirementIds],
+    questionsForClient: joinLines(v.questionsForClient),
+    scopeVerdict: v.scopeVerdict ?? '',
   };
 }
 
@@ -164,6 +171,8 @@ export function toUpdateRequest(
     risks,
     timelineImpact: v.timelineImpact,
     affectedRequirementIds: v.affectedRequirementIds,
+    questionsForClient: lines(v.questionsForClient),
+    scopeVerdict: v.scopeVerdict === '' ? null : v.scopeVerdict,
     effort: effort.every((x) => typeof x === 'number')
       ? {
           lowMinutes: effort[0] as number,
@@ -195,10 +204,16 @@ export function suggestionToForm(s: CrSuggestion): Partial<DraftFormInput> {
     dependencies: joinLines(s.dependencies),
     assumptions: joinLines(s.assumptions),
     timelineImpact: s.timelineImpact,
-    effortLow: minutesToHours(s.effort.lowMinutes),
-    effortLikely: minutesToHours(s.effort.likelyMinutes),
-    effortHigh: minutesToHours(s.effort.highMinutes),
+    ...(s.effort
+      ? {
+          effortLow: minutesToHours(s.effort.lowMinutes),
+          effortLikely: minutesToHours(s.effort.likelyMinutes),
+          effortHigh: minutesToHours(s.effort.highMinutes),
+        }
+      : {}),
     affectedRequirementIds: s.affectedRequirementIds,
+    questionsForClient: joinLines(s.questionsForClient),
+    scopeVerdict: s.scope.verdict,
   };
 }
 
@@ -215,6 +230,8 @@ export const PROVENANCE_FIELD: Partial<Record<keyof DraftFormInput, string>> = {
   effortLikely: 'effort',
   effortHigh: 'effort',
   affectedRequirementIds: 'affectedRequirementIds',
+  questionsForClient: 'questionsForClient',
+  scopeVerdict: 'scopeVerdict',
 };
 
 /** Server paths (`acceptanceCriteria.2`, `effort.lowMinutes`, …) → form fields. */
@@ -233,6 +250,8 @@ export function draftFieldFor(path: string): keyof DraftFormInput | null {
     confirmedEffortMinutes: 'confirmedHours',
     pricing: 'pricingMode',
     affectedRequirementIds: 'affectedRequirementIds',
+    questionsForClient: 'questionsForClient',
+    scopeVerdict: 'scopeVerdict',
   };
   return map[head] ?? null;
 }

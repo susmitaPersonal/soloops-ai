@@ -9,7 +9,7 @@ import { BannerAlert } from '@/features/core-ops/BannerAlert';
 import styles from '@/features/core-ops/core-ops.module.css';
 import { formatMoney } from '@/features/core-ops/money';
 import { bannerForError, type Banner } from '@/features/core-ops/mutation-errors';
-import { formatMinutes } from './cr-labels';
+import { formatMinutes, SCOPE_VERDICT } from './cr-labels';
 
 const LABEL: Record<string, string> = {
   pricing: 'Price',
@@ -25,6 +25,8 @@ const LABEL: Record<string, string> = {
   assumptions: 'Assumptions',
   risks: 'Risks',
   timelineImpact: 'Timeline impact',
+  scopeVerdict: 'Scope verdict',
+  questionsForClient: 'Questions for the client',
 };
 
 /** Renders one diff value as readable text (server values; no computation). */
@@ -37,6 +39,9 @@ function show(field: string, v: unknown, keys: Map<string, string>): string {
       : '—';
   }
   if (field === 'confirmedEffortMinutes' && typeof v === 'number') return formatMinutes(v);
+  if (field === 'scopeVerdict' && typeof v === 'string' && v in SCOPE_VERDICT) {
+    return SCOPE_VERDICT[v as keyof typeof SCOPE_VERDICT].label;
+  }
   if (field === 'effort' && typeof v === 'object') {
     const e = v as { lowMinutes: number; likelyMinutes: number; highMinutes: number };
     return `${formatMinutes(e.lowMinutes)} – ${formatMinutes(e.likelyMinutes)} – ${formatMinutes(e.highMinutes)}`;

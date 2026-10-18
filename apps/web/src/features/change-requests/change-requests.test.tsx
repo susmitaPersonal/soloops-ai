@@ -58,6 +58,8 @@ const version = (over: Partial<VersionDto> = {}): VersionDto => ({
   confirmedEffortMinutes: 540,
   pricing: { mode: 'TIME', hourlyRateMinor: '150000', priceMinor: '1350000', currency: 'INR' },
   timelineImpact: '3 days',
+  questionsForClient: [],
+  scopeVerdict: null,
   aiFieldProvenance: {},
   contentHash: null,
   proposedAt: null,
@@ -126,6 +128,22 @@ const analysis: AnalysisResponse = {
     risks: [{ description: 'Provider delay', severity: 'MEDIUM' }],
     timelineImpact: '2–4 days',
     questionsForClient: ['Keep email login?'],
+    scope: {
+      verdict: 'CHANGES_AGREED_SCOPE',
+      modelVerdict: 'CHANGES_AGREED_SCOPE',
+      rationale: 'It extends the agreed login.',
+      baselineSufficient: true,
+      evidence: [
+        {
+          requirementId: R1,
+          requirementKey: 'REQ-2',
+          requirementTitle: 'Customer login',
+          relation: 'CHANGES',
+          explanation: 'REQ-2 defines email login only.',
+        },
+      ],
+      adjustments: [],
+    },
   },
   indicativeCost: {
     currency: 'INR',
@@ -488,7 +506,49 @@ describe('S-07 AiSuggestionPanel (FR-021, FR-051)', () => {
     expect(onApply).toHaveBeenCalledWith(['clarifiedDescription'], analysis);
     expect(screen.getByText('Applied')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Apply all fields' }));
-    expect(onApply.mock.calls[1]?.[0]).toHaveLength(10);
+    expect(onApply.mock.calls[1]?.[0]).toHaveLength(12);
+    expect(screen.getByText(/uncertain AI estimate/)).toBeInTheDocument();
+  });
+
+  it('CT-SC-01 FR-021 the scope check shows the verdict in words, what it means and the evidence', async () => {
+    api.changeRequests.analyze.mockResolvedValue(analysis);
+    const user = userEvent.setup();
+    panel();
+    await user.click(screen.getByRole('button', { name: 'Analyse with AI' }));
+    const check = await screen.findByRole('region', { name: 'Scope check' });
+    expect(check).toHaveTextContent('Changes agreed scope');
+    expect(check).toHaveTextContent('It modifies or extends an agreed requirement');
+    expect(check).toHaveTextContent(
+      'REQ-2 Customer login is changed by it: REQ-2 defines email login only.',
+    );
+    expect(screen.queryByText(/SoloOps changed the AI/)).not.toBeInTheDocument();
+  });
+
+  it('CT-SC-02 FR-021 a verdict the evidence did not support is shown as Unclear, with the reason', async () => {
+    api.changeRequests.analyze.mockResolvedValue({
+      ...analysis,
+      suggestion: {
+        ...analysis.suggestion,
+        scope: {
+          verdict: 'UNCLEAR',
+          modelVerdict: 'LIKELY_ALREADY_COVERED',
+          rationale: 'Login is covered.',
+          baselineSufficient: true,
+          evidence: [],
+          adjustments: ['REQ-9 does not exist in this project, so it was removed.'],
+        },
+      },
+    });
+    const user = userEvent.setup();
+    panel();
+    await user.click(screen.getByRole('button', { name: 'Analyse with AI' }));
+    const check = await screen.findByRole('region', { name: 'Scope check' });
+    expect(check).toHaveTextContent('Unclear');
+    expect(check).toHaveTextContent('No agreed requirement was cited as evidence.');
+    expect(check).toHaveTextContent(
+      'The AI said “Likely already covered”, but its evidence did not support that',
+    );
+    expect(check).toHaveTextContent('REQ-9 does not exist');
   });
 
   it.each([
@@ -596,6 +656,30 @@ describe('S-07 DraftEditor (FR-022)', () => {
     expect(body.risks).toEqual(analysis.suggestion.risks);
     expect(body.affectedRequirementIds).toEqual([R1]);
     expect(body).not.toHaveProperty('priceMinor');
+  });
+
+  it('CT-SC-03 FR-021 the applied scope verdict and questions are editable and saved with provenance', async () => {
+    api.changeRequests.analyze.mockResolvedValue(analysis);
+    api.changeRequests.updateDraft.mockResolvedValue({});
+    const user = userEvent.setup();
+    editor();
+    expect(screen.getByLabelText(/Scope verdict/)).toHaveValue('');
+    await user.click(screen.getByRole('button', { name: 'Analyse with AI' }));
+    await user.click(await screen.findByRole('button', { name: 'Apply Scope verdict' }));
+    await user.click(screen.getByRole('button', { name: 'Apply Questions for the client' }));
+    expect(screen.getByLabelText(/Scope verdict/)).toHaveValue('CHANGES_AGREED_SCOPE');
+    expect(screen.getByLabelText(/Questions for the client/)).toHaveValue('Keep email login?');
+    // The person corrects the verdict: the AI badge for that field is cleared.
+    await user.selectOptions(screen.getByLabelText(/Scope verdict/), 'NEW_SCOPE');
+    await user.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => expect(api.changeRequests.updateDraft).toHaveBeenCalled());
+    const body = api.changeRequests.updateDraft.mock.calls[0]?.[3];
+    expect(body.scopeVerdict).toBe('NEW_SCOPE');
+    expect(body.questionsForClient).toEqual(['Keep email login?']);
+    expect(body.aiFieldProvenance).toMatchObject({
+      scopeVerdict: null,
+      questionsForClient: analysis.generationId,
+    });
   });
 
   it('CT-DE-02 converts hours to minutes and FIXED price to minor units; validates the range', async () => {
@@ -736,6 +820,23 @@ describe('S-08 ProposalSummaryView (FR-027, AC-011.3)', () => {
       expect(text).toContain(part);
     }
     expect(text).not.toContain('DRAFT');
+  });
+
+  it('CT-SUM-03 FR-021 the confirmed scope verdict and questions reach the client, in plain words', () => {
+    const v = version({
+      state: 'PROPOSED',
+      contentHash: HASH,
+      scopeVerdict: 'NEW_SCOPE',
+      questionsForClient: ['Which OTP provider do you use?'],
+    });
+    const text = summaryText(summary(v));
+    expect(text).toContain('Scope: This is new work beyond the agreed scope.');
+    expect(text).toContain('Questions for you:\n- Which OTP provider do you use?');
+    render(<ProposalSummaryView summary={summary(v)} />);
+    expect(screen.getByRole('heading', { name: 'Questions for you' })).toBeInTheDocument();
+    expect(
+      screen.getByText('Scope: This is new work beyond the agreed scope.'),
+    ).toBeInTheDocument();
   });
 
   it('CT-SUM-02 a draft carries the DRAFT watermark', () => {

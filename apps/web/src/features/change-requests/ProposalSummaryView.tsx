@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Button } from '@/components/Button';
 import { formatDate } from '@/features/core-ops/labels';
 import { formatMoney } from '@/features/core-ops/money';
-import { formatMinutes, shortHash } from './cr-labels';
+import { formatMinutes, SCOPE_VERDICT_CLIENT, shortHash } from './cr-labels';
 import s from './ProposalSummaryView.module.css';
 
 /** Plain-text version for pasting into email or chat (FR-027). */
@@ -23,11 +23,13 @@ export function summaryText(p: ProposalSummary): string {
     '',
     v.title,
     v.clarifiedDescription,
+    v.scopeVerdict ? `Scope: ${SCOPE_VERDICT_CLIENT[v.scopeVerdict]}` : '',
     '',
     ...list("What's included", v.inScope),
     ...list('Not included', v.outOfScope),
     ...list('Acceptance criteria', v.acceptanceCriteria),
     ...list('Assumptions', v.assumptions),
+    ...list('Questions for you', v.questionsForClient),
     `Price: ${price}`,
     v.effort
       ? `Estimated effort: ${formatMinutes(v.effort.lowMinutes)} – ${formatMinutes(v.effort.highMinutes)}`
@@ -130,11 +132,13 @@ export function ProposalSummaryView({ summary }: { summary: ProposalSummary }) {
             <strong>{v.title}</strong>
           </p>
           <p>{v.clarifiedDescription}</p>
+          {v.scopeVerdict ? <p>Scope: {SCOPE_VERDICT_CLIENT[v.scopeVerdict]}</p> : null}
         </section>
         {section("What's included", v.inScope)}
         {section('Not included', v.outOfScope)}
         {section('Acceptance criteria', v.acceptanceCriteria)}
         {section('Assumptions', v.assumptions)}
+        {section('Questions for you', v.questionsForClient)}
         <section>
           <h2>Price</h2>
           <p className={s.price}>

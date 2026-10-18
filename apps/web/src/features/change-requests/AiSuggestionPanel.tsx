@@ -11,7 +11,7 @@ import { browserApi } from '@/lib/api/browser';
 import { describeError } from '@/lib/api/errors';
 import styles from '@/features/core-ops/core-ops.module.css';
 import { formatMoney } from '@/features/core-ops/money';
-import { formatMinutes } from './cr-labels';
+import { EVIDENCE_RELATION, formatMinutes, SCOPE_VERDICT } from './cr-labels';
 
 export type SuggestionField =
   | 'clarifiedDescription'
@@ -23,9 +23,13 @@ export type SuggestionField =
   | 'risks'
   | 'effort'
   | 'timelineImpact'
-  | 'affectedRequirementIds';
+  | 'affectedRequirementIds'
+  | 'scopeVerdict'
+  | 'questionsForClient';
 
 const FIELD_LABEL: Record<SuggestionField, string> = {
+  scopeVerdict: 'Scope verdict',
+  questionsForClient: 'Questions for the client',
   clarifiedDescription: 'Description',
   inScope: 'In scope',
   outOfScope: 'Not included',
@@ -48,17 +52,69 @@ function preview(result: AnalysisResponse, field: SuggestionField): string {
   const s = result.suggestion;
   switch (field) {
     case 'effort':
-      return `${formatMinutes(s.effort.lowMinutes)} – ${formatMinutes(s.effort.likelyMinutes)} – ${formatMinutes(s.effort.highMinutes)}`;
+      return s.effort
+        ? `${formatMinutes(s.effort.lowMinutes)} – ${formatMinutes(s.effort.likelyMinutes)} – ${formatMinutes(s.effort.highMinutes)}`
+        : 'No extra effort estimated';
     case 'risks':
       return s.risks.map((r) => `${r.severity}: ${r.description}`).join('\n');
     case 'affectedRequirementIds':
       return s.affectedRequirementKeys.join(', ') || 'None';
+    case 'scopeVerdict':
+      return SCOPE_VERDICT[s.scope.verdict].label;
+    case 'questionsForClient':
+      return s.questionsForClient.join('\n') || 'None';
     case 'clarifiedDescription':
     case 'timelineImpact':
       return s[field];
     default:
       return s[field].join('\n');
   }
+}
+
+/**
+ * FR-021 scope check: the verdict SoloOps stands behind after checking the AI's evidence against
+ * the project's real, agreed requirements. When the evidence did not support the AI's own verdict,
+ * that is said openly. Plain text only (SEC-009); the verdict is a suggestion until a person applies
+ * and proposes it.
+ */
+function ScopeCheck({ scope }: { scope: AnalysisResponse['suggestion']['scope'] }) {
+  const verdict = SCOPE_VERDICT[scope.verdict];
+  return (
+    <section className={styles.group} aria-labelledby="ai-scope-check">
+      <div className={styles.groupHeader}>
+        <span id="ai-scope-check" className={styles.rowTitle}>
+          Scope check
+        </span>
+        <StatusBadge tone={verdict.tone}>{verdict.label}</StatusBadge>
+      </div>
+      <p className={styles.muted}>{verdict.help}</p>
+      {scope.rationale ? <p className={styles.preLine}>{scope.rationale}</p> : null}
+      {scope.evidence.length > 0 ? (
+        <ul aria-label="Evidence from agreed requirements">
+          {scope.evidence.map((e) => (
+            <li key={e.requirementId}>
+              <strong>
+                {e.requirementKey} {e.requirementTitle}
+              </strong>{' '}
+              {EVIDENCE_RELATION[e.relation]}: {e.explanation}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={styles.muted}>No agreed requirement was cited as evidence.</p>
+      )}
+      {scope.verdict !== scope.modelVerdict ? (
+        <Alert tone="warning" title="SoloOps changed the AI’s verdict">
+          The AI said “{SCOPE_VERDICT[scope.modelVerdict].label}”, but its evidence did not support
+          that, so SoloOps shows “{verdict.label}”. {scope.adjustments.join(' ')}
+        </Alert>
+      ) : scope.adjustments.length > 0 ? (
+        <Alert tone="warning" title="Some evidence was removed">
+          {scope.adjustments.join(' ')}
+        </Alert>
+      ) : null}
+    </section>
+  );
 }
 
 /**
@@ -148,8 +204,8 @@ export function AiSuggestionPanel({
         <StatusBadge tone="info">Suggestion only</StatusBadge>
       </div>
       <p className={styles.muted}>
-        The AI drafts a proposal from the client’s message. You review and decide what to use; it
-        never proposes, prices or approves anything.
+        The AI compares the client’s message with your agreed (baselined) requirements and drafts a
+        proposal. You review and decide what to use; it never proposes, prices or approves anything.
       </p>
       {state.kind === 'running' ? (
         <div className={styles.actions}>
@@ -189,6 +245,7 @@ export function AiSuggestionPanel({
               {w.message}
             </Alert>
           ))}
+          <ScopeCheck scope={state.result.suggestion.scope} />
           <div className={styles.actions}>
             <Button
               type="button"
@@ -220,16 +277,10 @@ export function AiSuggestionPanel({
               </li>
             ))}
           </ul>
-          {state.result.suggestion.questionsForClient.length > 0 ? (
-            <div className={styles.group}>
-              <span className={styles.rowTitle}>Questions for the client</span>
-              <ul>
-                {state.result.suggestion.questionsForClient.map((q, i) => (
-                  <li key={`${i}-${q}`}>{q}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+          <p className={styles.muted}>
+            The effort range is an uncertain AI estimate. It has not been evaluated for accuracy and
+            can vary a lot between runs, so check it against your own experience.
+          </p>
           {state.result.indicativeCost ? (
             <p className={styles.muted}>
               Indicative cost (calculated by SoloOps from the effort range and your rate, not by the

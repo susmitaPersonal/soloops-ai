@@ -1,5 +1,51 @@
-import type { Channel, CrStatus, Decision, VersionState } from '@soloops/contracts';
+import type {
+  Channel,
+  CrStatus,
+  Decision,
+  EvidenceRelation,
+  ScopeVerdict,
+  VersionState,
+} from '@soloops/contracts';
 import type { BadgeTone } from '@/components/StatusBadge';
+
+/** FR-021 scope check: plain-language verdicts (text always shown, never colour alone). */
+export const SCOPE_VERDICT: Record<ScopeVerdict, { label: string; help: string; tone: BadgeTone }> =
+  {
+    NEW_SCOPE: {
+      label: 'New scope',
+      help: 'No agreed requirement describes this. It is extra work to propose and price.',
+      tone: 'warning',
+    },
+    CHANGES_AGREED_SCOPE: {
+      label: 'Changes agreed scope',
+      help: 'It modifies or extends an agreed requirement, so it needs a new decision.',
+      tone: 'warning',
+    },
+    LIKELY_ALREADY_COVERED: {
+      label: 'Likely already covered',
+      help: 'Agreed requirements seem to cover it. Check the evidence before treating it as free.',
+      tone: 'info',
+    },
+    UNCLEAR: {
+      label: 'Unclear',
+      help: 'Not enough information to decide. Ask the client the questions below.',
+      tone: 'neutral',
+    },
+  };
+
+/** How the confirmed verdict reads on the client-facing proposal (S-08). */
+export const SCOPE_VERDICT_CLIENT: Record<ScopeVerdict, string> = {
+  NEW_SCOPE: 'This is new work beyond the agreed scope.',
+  CHANGES_AGREED_SCOPE: 'This changes work that was already agreed.',
+  LIKELY_ALREADY_COVERED: 'This appears to be covered by the agreed scope.',
+  UNCLEAR: 'The scope still needs to be clarified (see the questions below).',
+};
+
+export const EVIDENCE_RELATION: Record<EvidenceRelation, string> = {
+  COVERS: 'already covers it',
+  CHANGES: 'is changed by it',
+  RELATED: 'is related',
+};
 
 /** Design system §6 status mapping for change requests. */
 export const VERSION_STATE: Record<VersionState, { label: string; tone: BadgeTone }> = {

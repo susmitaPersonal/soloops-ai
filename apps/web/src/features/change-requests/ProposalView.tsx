@@ -4,7 +4,7 @@ import { Alert } from '@/components/Alert';
 import { StatusBadge } from '@/components/StatusBadge';
 import styles from '@/features/core-ops/core-ops.module.css';
 import { formatMoney } from '@/features/core-ops/money';
-import { formatMinutes, VERSION_STATE } from './cr-labels';
+import { formatMinutes, SCOPE_VERDICT, VERSION_STATE } from './cr-labels';
 
 function List({ title, items }: { title: string; items: string[] }) {
   if (items.length === 0) return null;
@@ -85,6 +85,15 @@ export function ProposalView({
       ) : null}
       <h4 className={styles.rowTitle}>{version.title}</h4>
       <p>{version.clarifiedDescription}</p>
+      {version.scopeVerdict ? (
+        <p>
+          Confirmed scope verdict:{' '}
+          <StatusBadge tone={SCOPE_VERDICT[version.scopeVerdict].tone}>
+            {SCOPE_VERDICT[version.scopeVerdict].label}
+          </StatusBadge>
+        </p>
+      ) : null}
+      <List title="Questions for the client" items={version.questionsForClient} />
       <List title="In scope" items={version.inScope} />
       <List title="Not included" items={version.outOfScope} />
       <List title="Acceptance criteria" items={version.acceptanceCriteria} />

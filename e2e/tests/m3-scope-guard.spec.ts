@@ -93,10 +93,16 @@ test('E2E-WF-04…07 change request → AI estimate (mock) → propose → clien
   // E2E-WF-05 / AC-009.1–.2: AI suggestion (mock), applied by a human; confirmed effort stays empty.
   await page.getByRole('button', { name: 'Analyse with AI' }).click();
   await expect(page.getByText('AI suggestion ready.')).toBeAttached();
+  // FR-021 scope check: compared with the AGREED requirements, evidence resolved to REQ-1.
+  const scopeCheck = page.getByRole('region', { name: 'Scope check' });
+  await expect(scopeCheck).toContainText('Changes agreed scope');
+  await expect(scopeCheck).toContainText('REQ-1 Customer login is changed by it');
   await expect(page.getByText(/Indicative cost \(calculated by SoloOps/)).toContainText(
     '₹9,000.00',
   );
   await page.getByRole('button', { name: 'Apply all fields' }).click();
+  // The person can still correct the verdict before proposing; it is bound by the version hash.
+  await expect(page.getByLabel(/Scope verdict/)).toHaveValue('CHANGES_AGREED_SCOPE');
   await expect(page.getByLabel(/Clarified description/)).toHaveValue(
     /one-time password delivered via WhatsApp/,
   );
