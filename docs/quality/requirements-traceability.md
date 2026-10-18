@@ -2,7 +2,7 @@
 
 Chain: **Requirement → User story → Acceptance criteria → Design/module → API/UI → Test case → Status**.
 
-> **Status values:** `Planned` (designed, not implemented; its test cases are **Blocked**) · `In progress` · `Done` (only when the tests listed **exist and pass**, per the [definition of done](../engineering/definition-of-done.md)). Last updated 2026-10-18. "Done" rows passed locally (`npm run validate`, `npm run test:coverage`, Playwright; see the [test execution report](test-execution-report.md)). CI has not run on GitHub yet.
+> **Status values:** `Planned` (designed, not implemented; its test cases are **Blocked**) · `In progress` · `Done` (only when the tests listed **exist and pass**, per the [definition of done](../engineering/definition-of-done.md)). Last updated 2026-10-19. "Done" rows passed locally (`npm run validate`, `npm run test:coverage`, Playwright; latest run in [release readiness audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19)). CI has not run on GitHub yet.
 
 ## Functional requirements
 
@@ -41,7 +41,7 @@ Chain: **Requirement → User story → Acceptance criteria → Design/module �
 | FR-044 | M | US-020 | AC-020.1–.4 | billing | `…/issue` · S-11 | TC-020.1–.4, TC-BR-023 | Done (M5) |
 | FR-045 | S | US-020 | AC-020.5 | billing | S-11 print | TC-020.5 | Done (M5) |
 | FR-046 | S | US-021 | AC-021.1 | billing | `…/void` · S-11 | TC-021.1 | Done (M5) |
-| FR-050 | M | US-022 | AC-022.1–.2 | ai | config · `{ws}/ai/status` | TC-022.1–.2 | Done (M3; no real endpoint verified) |
+| FR-050 | M | US-022 | AC-022.1–.2 | ai | config · `{ws}/ai/status` | TC-022.1–.2 | Done (M3). A real endpoint was smoke-tested manually with one local open-weight model on 2026-10-18 and 2026-10-19 (release audit §12.4, §13); no model has been evaluated |
 | FR-051 | M | US-009 | AC-009.3–.4 | ai, scope-guard | S-07 | TC-009.3–.4 | Done (M3) |
 | FR-052 | M | US-009 | AC-009.1 | ai | AiGeneration | TC-009.1 | Done (M3) |
 | FR-053 | C | US-022 | AC-022.2 | ai | `{ws}/ai/status` | TC-022.2 | Done (M3) |
@@ -63,10 +63,10 @@ Chain: **Requirement → User story → Acceptance criteria → Design/module �
 | SEC-003 CSRF | `platform/http/csrf.ts` | TC-SEC-04 (missing/wrong header, foreign/missing Origin, safe GET allowed) | Done |
 | SEC-004 isolation | `platform/db/collections.ts` (`TenantCollection`, user-scoped view), `workspace/membership.ts` | TC-SEC-01 matrix, TC-SEC-02 route inventory, TenantCollection and guard tests, TC-TEN-04 (revoked membership → 404 on the next request), E2E foreign URL → 404 | Done for M1 routes (extend matrix every milestone) |
 | SEC-005 validation, body limit | `platform/http/validate.ts`, contracts, `bodyLimit` in `app.ts` | ERR-010 cases, NoSQL operator injection, malformed JSON 400, 413 | Done for M1 routes |
-| SEC-006 rate limits | `platform/http/rate-limit.ts`, buckets in `app.ts` | TC-SEC-06, `security-hardening.test.ts` (XFF spoofing, per-email, per-IP spraying, register per IP, bounded memory) | Done for auth. AI limits come with M4 |
+| SEC-006 rate limits | `platform/http/rate-limit.ts`, buckets in `app.ts` | TC-SEC-06, `security-hardening.test.ts` (XFF spoofing, per-email, per-IP spraying, register per IP, bounded memory); `scope-guard-ai.test.ts` (per-workspace AI limit, one concurrent analysis per version) | Done for auth and AI |
 | SEC-007 secrets | `platform/config`, `platform/logging` | config tests (no values in errors, production refusals), TC-SEC-07 | Done |
 | SEC-010 headers, lockfile, audit | `secureHeaders` (API), `proxy.ts` nonce CSP + `next.config.ts` headers (web), CI `npm audit` | Security header test, E2E CSP/header test | Done (CI audit not yet executed on GitHub) |
-| SEC-011 owner-only | `requireMembership({ role: OWNER })` + service check | TC-002.2, TC-SEC-03, TC-TEN-04 (role downgrade), TC-TEN-05 (per-workspace roles) | Done for settings |
+| SEC-011 owner-only | `requireMembership({ role: OWNER })` + service check | TC-002.2, TC-SEC-03, TC-TEN-04 (role downgrade), TC-TEN-05 (per-workspace roles), TC-020.2 (invoice issue and void) | Done for settings, AI enablement, invoice issue and void. Member management (FR-004) is not built |
 | NFR-008 strict TS, boundaries | `packages/config` | TC-ARCH-01 (13 tests), `tsc` in 5 workspaces | Done |
 | NFR-010 logs, health | `platform/logging`, `request-logger.ts`, `/healthz`, `/readyz` | TC-SEC-07, request-log test, readiness tests (pending migrations / DB down → 503) | Done |
 | NFR-012 360 px | M1 screens | E2E responsive (Chromium 360 px, Pixel 7) | Done for M1 screens |
@@ -82,7 +82,7 @@ Chain: **Requirement → User story → Acceptance criteria → Design/module �
 | FR-012 requirements | same module; S-05 `projects/[projectId]/requirements/page.tsx`, `features/requirements/*` | `core-ops-requirements.test.ts`, `RequirementsBoard.test.tsx`; E2E | Done |
 | FR-013 baselines, BR-004, BR-005 | `service.createBaseline` (transaction + audit), `domain/baseline-hash.ts`, draft-only update filters in `repository.ts` | `core-ops-requirements.test.ts`, `baseline-hash.test.ts`, `RequirementsBoard.test.tsx`; E2E | Done |
 | FR-014 tasks, BR-015 | `service.createTask/updateTask`, `domain/task-scope.ts`; S-09 `projects/[projectId]/tasks/page.tsx`, `features/tasks/*` | `core-ops-tasks.test.ts`, `task-scope.test.ts`, `TasksBoard.test.tsx`; E2E | Done for baseline and internal links |
-| BR-029 archived read-only | `isProjectReadOnly`, guarded `archivedAt: null` writes, `touchProject` in each child transaction | TC-004.3, TC-005.2, TC-BR-029.1–.2 | Done for clients, projects, requirements, baselines and tasks (change requests and entries: M3/M5) |
+| BR-029 archived read-only | `isProjectReadOnly`, guarded `archivedAt: null` writes, `touchProject` in each child transaction | TC-004.3, TC-005.2, TC-BR-029.1–.2, TC-008.2 (change requests), `delivery-billing.test.ts` "BR-029 an archived project refuses new, edited and deleted work" (entries) | Done for clients, projects, requirements, baselines, tasks, change requests and billable entries |
 | SEC-004 (M2 routes) | `requireMembership` on every Core Ops path; `TenantCollection` for the five new collections | TC-SEC-01 (22 routes), TC-SEC-02, TC-SEC-01d; E2E `SEC-004 AC-004.2` | Done for M2 routes |
 
 ## Test execution traceability (Requirement → AC → Test case → Automated test → Result, 2026-10-17)
@@ -101,16 +101,16 @@ Detailed cases are in [test cases](test-cases.md). Result is from the final run 
 | FR-011 | AC-005.1, AC-005.2 | TC-005.1, TC-005.2, TC-005.V, TC-005.E, TC-002.1d, TC-BR-029.1–.2 | `core-ops-clients-projects.test.ts`; `ProjectForm.test.tsx`; E2E | Pass |
 | FR-012 | AC-006.1, AC-006.2 | TC-006.1, TC-006.2, TC-006.V | `core-ops-requirements.test.ts`; `RequirementsBoard.test.tsx`; E2E | Pass |
 | FR-013 | AC-007.1, AC-007.2, AC-007.3 | TC-007.1–.3, TC-007.C, TC-BR-005, TC-BR-028.baseline | `core-ops-requirements.test.ts`, `baseline-hash.test.ts`; `RequirementsBoard.test.tsx`; E2E | Pass |
-| FR-014 | AC-016.1, AC-016.2 | TC-016.1, TC-016.S, TC-016.2, TC-016.U, TC-016.L | `core-ops-tasks.test.ts`, `task-scope.test.ts`; `TasksBoard.test.tsx`; E2E | Pass (baseline and internal links). Change-request links **Blocked** (M3) |
+| FR-014 | AC-016.1, AC-016.2 | TC-016.1, TC-016.S, TC-016.2, TC-016.U, TC-016.L | `core-ops-tasks.test.ts`, `task-scope.test.ts`; `TasksBoard.test.tsx`; E2E | Pass. Approved change-request links: TC-016.4, TC-016.5 (`delivery-billing.test.ts`) and `TasksBoard.test.tsx` (S-09 approved change requests) |
 | SEC-001 | — | TC-001.1, TC-SEC-06c | `identity.test.ts`, `security-hardening.test.ts` | Pass |
 | SEC-002 | AC-001.4 | TC-SEC-05a–f | `identity.test.ts`, `security-hardening.test.ts`, `atomicity-and-boundaries.test.ts`, `session-token.test.ts` | Pass |
 | SEC-003 | — | TC-SEC-04 | `security.test.ts`, `atomicity-and-boundaries.test.ts` (logout), `api-client.test.ts` | Pass |
 | SEC-004 | AC-004.2 | TC-SEC-01, TC-SEC-01b, TC-SEC-01d, TC-SEC-02, TC-TEN-01–04, TC-004.2 | `security.test.ts`, `platform.test.ts`, `guards.test.ts`, `security-hardening.test.ts`, `membership-lifecycle.test.ts`; E2E `SEC-004` | Pass |
 | SEC-005 | — | TC-SEC-INP, TC-002.V, TC-002.M, TC-TEN-02 | `security.test.ts`, `workspace.test.ts`, `guards.test.ts`, `contracts.test.ts` | Pass |
-| SEC-006 | AC-001.3 | TC-SEC-06a–c | `identity.test.ts`, `security-hardening.test.ts`, `atomicity-and-boundaries.test.ts` | Pass (auth). AI limits **Blocked** (M4) |
+| SEC-006 | AC-001.3 | TC-SEC-06a–c | `identity.test.ts`, `security-hardening.test.ts`, `atomicity-and-boundaries.test.ts` | Pass (auth). AI limits: Pass (`scope-guard-ai.test.ts`: per-workspace rate limit, one concurrent analysis per version) |
 | SEC-007 | — | TC-SEC-07, TC-SEC-CFG | `platform.test.ts`, `security-hardening.test.ts` | Pass |
 | SEC-010 | — | TC-SEC-10 | `security.test.ts`; E2E `SEC-010` | Pass |
-| SEC-011 | AC-002.2 | TC-002.2, TC-SEC-03, TC-TEN-04, TC-TEN-05 | `workspace.test.ts`, `security.test.ts`, `membership-lifecycle.test.ts`, `WorkspaceSettingsForm.test.tsx` | Pass (settings). Other owner-only actions **Blocked** |
+| SEC-011 | AC-002.2 | TC-002.2, TC-SEC-03, TC-TEN-04, TC-TEN-05 | `workspace.test.ts`, `security.test.ts`, `membership-lifecycle.test.ts`, `WorkspaceSettingsForm.test.tsx` | Pass (settings, AI enablement via TC-SEC-03, invoice issue and void via TC-020.2 in `invoices.test.ts`). Member management (FR-004) is not built |
 | NFR-002 / BR-028 | — | TC-BR-028a, TC-001.5, TC-BR-028.settings, TC-BR-028.baseline, TC-007.C | `platform.test.ts`, `atomicity-and-boundaries.test.ts`, `core-ops-requirements.test.ts` | Pass for implemented actions |
 | NFR-008 / BR-001 (boundary part) | — | TC-ARCH-01 | `packages/config/test/boundaries.test.ts` | Pass |
 | NFR-010 | — | TC-HLT-01, TC-REQ-ID, TC-SEC-07, TC-ERR-500 | `platform.test.ts`, `security.test.ts`, `error-mapping.test.ts` | Pass |
@@ -139,7 +139,7 @@ Detailed cases are in [test cases](test-cases.md). Result is from the final run 
 | BR-010 | TC-012.2, TC-012.3, TC-012.4, E2E stale decision (Pass) |
 | BR-011 | TC-011.2, TC-013.1, E2E-WF-12 (Pass) |
 | BR-012 | TC-015.2, TC-017.2 |
-| BR-013 | TC-012.6, TC-BR-013 (Pass) |
+| BR-013 | TC-012.6, TC-016.5, TC-017.8 (Pass). TC-BR-013 is a test-plan ID whose case is covered by TC-016.5 and TC-017.8; no test carries the ID TC-BR-013 itself |
 | BR-014 | TC-012.1, TC-012.5 (Pass) |
 | BR-015 | TC-016.1, TC-016.S, TC-016.U, TC-016.R (Pass for baseline and internal links) |
 | BR-016 | TC-018.1–.3, TC-017.2, TC-017.8, UT-ELIG-01…05 (M4) |
@@ -152,10 +152,10 @@ Detailed cases are in [test cases](test-cases.md). Result is from the final run 
 | BR-023 | TC-020.1, TC-020.2, TC-020.3, TC-BR-023 (concurrent issues), TC-SEC-03 |
 | BR-024 | TC-021.1 |
 | BR-025 | TC-019.3 |
-| BR-026 | TC-010.3, TC-BR-026 (Pass for proposals; invoices M5) |
+| BR-026 | UT-CON-SG-01 (`packages/contracts/src/scope-guard.test.ts`, effort range bounds) and CT-SUM-01 (`change-requests.test.tsx`, disclaimer in the proposal summary) (Pass). TC-010.3 and TC-BR-026 are test-plan IDs covered by those two tests; no test carries those IDs |
 | BR-027 | TC-AI-02 / TC-009.1 indicative cost, TC-AI-PRICE (Pass) |
 | BR-028 | TC-BR-028, TC-BR-028.baseline/.req/.task/.project, CR transitions (M3), `cr.tasks.created` (M4), `invoice.created/issued/voided` (M5) |
-| BR-029 | TC-004.3, TC-005.2, TC-005.R, TC-BR-029.1–.6 (Pass); TC-008.2 (Blocked, M3) |
+| BR-029 | TC-004.3, TC-005.2, TC-005.R, TC-BR-029.1–.6 (Pass); TC-008.2 (Pass, `scope-guard-lifecycle.test.ts`); entries: `delivery-billing.test.ts` BR-029 (Pass) |
 | BR-030 | TC-BR-030 (entries on any invoice line cannot be deleted; no delete paths for decisions or issued invoices) |
 
 ## Non-functional, security, privacy, accessibility → verification
@@ -164,7 +164,7 @@ Detailed cases are in [test cases](test-cases.md). Result is from the final run 
 | --- | --- |
 | NFR-001 | TC-BR-019, TC-019.1 |
 | NFR-002 | TC-BR-028, TC-BR-023 |
-| NFR-003 | TC-BR-030 + DB grants review |
+| NFR-003 | TC-BR-030. The audit service exposes an insert path only (`apps/api/src/modules/audit/index.ts`). There is no dedicated test that audit events cannot be changed; the equivalent for approvals is `scope-guard-lifecycle.test.ts` "BR-014 approvals are insert-only" |
 | NFR-004 | Load test script (M6), measured and recorded |
 | NFR-005, NFR-006 | TC-AI-01, TC-009.3 |
 | NFR-007 | Manual: `docker stats` during E2E (M6) |
@@ -173,7 +173,7 @@ Detailed cases are in [test cases](test-cases.md). Result is from the final run 
 | NFR-010 | TC-SEC-07, `/readyz` integration test |
 | NFR-011, NFR-012 | Playwright projects (chromium, firefox, webkit) + mobile viewport |
 | NFR-013 | Code review |
-| NFR-014 | CI license check |
+| NFR-014 | **Not automated:** the CI workflow has no licence check. Manual lockfile licence scans were done on 2026-10-18 and 2026-10-19 (release audit §11, §13): no GPL/AGPL; optional `sharp`/`libvips` binaries are LGPL-3.0-or-later |
 | NFR-015 | SC-7 contributor trial |
 | NFR-016 | Restore rehearsal record |
 | SEC-001–011 | TC-SEC-01…09, TC-001.2–.4, TC-002.2, TC-020.2 |

@@ -1,6 +1,6 @@
 # Test Plan
 
-> **Status:** Partly executed (2026-10-17). Executed and passing: TC-001.1–.4, TC-002.1–.3, TC-SEC-01–07 (for M1 endpoints), TC-ARCH-01, TC-BR-028 (platform level and per implemented action), and the M1 E2E suite. Every other case is **Blocked** because its feature is not implemented yet. Detailed cases (preconditions, inputs, steps, expected and actual results) are in [test cases](test-cases.md), and results are in the [execution report](test-execution-report.md).
+> **Status:** Executed for M1–M5 (latest full run 2026-10-19, [release audit §13](release-readiness-audit.md#13-final-release-closure-2026-10-19)). Per-case results are in the [traceability matrix](requirements-traceability.md). Cases for unbuilt features stay **Blocked**: member management (FR-004, including E2E-WF-13), the audit log UI (FR-016), the dashboard (FR-017) and export (FR-061). Some plan-level IDs are covered by tests under other IDs; the matrix names those tests. Detailed cases (preconditions, inputs, steps, expected and actual results) are in [test cases](test-cases.md), and results are in the [execution report](test-execution-report.md).
 
 Levels: **U** unit · **I** API integration (in-process Hono, real MongoDB replica set) · **C** component · **E** end-to-end (Playwright) · **A** architecture/lint.
 
@@ -45,7 +45,7 @@ Levels: **U** unit · **I** API integration (in-process Hono, real MongoDB repli
 | TC-009.6 | I | Injection text causes no state change on any entity |
 | TC-010.1 | U, I | TIME price = roundHalfUp(minutes × rate / 60). A client-sent price is ignored |
 | TC-010.2 | I | FIXED price = entered amount |
-| TC-010.3 | C | Estimate disclaimer rendered with effort |
+| TC-010.3 | C | Estimate disclaimer rendered with effort. Covered by CT-SUM-01 (`change-requests.test.tsx`) |
 | TC-011.1 | I | Propose with missing assumptions or acceptance criteria gives 422 with a field list |
 | TC-011.2 | I | Propose freezes the version and stores the hash. PATCH afterwards gives 409. Audit written |
 | TC-011.3 | C, E | Summary page contains all required sections and the disclaimer |
@@ -91,12 +91,12 @@ Levels: **U** unit · **I** API integration (in-process Hono, real MongoDB repli
 | --- | --- | --- |
 | TC-BR-005 | U | Baseline hash is stable under key order. Multiple baselines per project |
 | TC-BR-008 | U | Canonical JSON hashing is deterministic, and every listed field affects the hash |
-| TC-BR-013 | I | Work logged under v1 stays eligible after v2 approval supersedes v1 |
+| TC-BR-013 | I | Work logged under v1 stays eligible after v2 approval supersedes v1. Covered by TC-016.5 and TC-017.8 (`delivery-billing.test.ts`) |
 | TC-BR-016 | U | Table test: every eligibility reason code and the eligible case, including CURRENCY_MISMATCH (BR-022) |
 | TC-BR-019 | U | Property tests: integer-only arithmetic, Σ lines = subtotal, tax rounding bounds |
 | TC-BR-021 | U | Rate resolution order: CR version → project override → workspace default |
 | TC-BR-023 | I | Concurrent issues of different drafts produce a gapless, unique sequence |
-| TC-BR-026 | U | Estimate schema bounds: low ≤ likely ≤ high, 0 < x ≤ 2000 |
+| TC-BR-026 | U | Estimate schema bounds: low ≤ likely ≤ high, 0 < x ≤ 2000. Covered by UT-CON-SG-01 (`packages/contracts/src/scope-guard.test.ts`) |
 | TC-BR-028 | I | Each audited action writes exactly one event. A forced failure rolls back both |
 | TC-BR-030 | I | Deleting rows referenced by decisions or issued invoices is refused |
 
