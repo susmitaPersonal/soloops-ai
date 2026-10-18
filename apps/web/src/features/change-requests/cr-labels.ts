@@ -2,7 +2,9 @@ import type {
   Channel,
   CrStatus,
   Decision,
-  EvidenceRelation,
+  AskRelation,
+  AskStatus,
+  ScopeCoverage,
   ScopeVerdict,
   VersionState,
 } from '@soloops/contracts';
@@ -41,10 +43,28 @@ export const SCOPE_VERDICT_CLIENT: Record<ScopeVerdict, string> = {
   UNCLEAR: 'The scope still needs to be clarified (see the questions below).',
 };
 
-export const EVIDENCE_RELATION: Record<EvidenceRelation, string> = {
-  COVERS: 'already covers it',
-  CHANGES: 'is changed by it',
-  RELATED: 'is related',
+/** How a verified citation bears on one ask, as a sentence start: "Covered by REQ-2: …". */
+export const ASK_RELATION: Record<AskRelation, string> = {
+  COVERS: 'Covered by',
+  CHANGES: 'Changes',
+  CONFLICTS: 'Conflicts with',
+  RELATED: 'Related to (does not cover it)',
+};
+
+/** Per-ask result after SoloOps checked the quotes, in plain words (never colour alone). */
+export const ASK_STATUS: Record<AskStatus, string> = {
+  COVERED: 'In the agreed scope',
+  CHANGES: 'Changes the agreed scope',
+  CONFLICT: 'Conflicting agreed requirements',
+  NOT_COVERED: 'Not in the agreed scope',
+};
+
+/** Coverage of the whole request, computed by SoloOps from verified quotes only (BR-031). */
+export const SCOPE_COVERAGE: Record<ScopeCoverage, string> = {
+  FULL: 'Every part of the request is backed by a quote from an agreed requirement.',
+  PARTIAL: 'Only part of the request is backed by agreed requirements.',
+  NONE: 'No part of the request is backed by an agreed requirement.',
+  CONFLICT: 'Agreed requirements conflict about this request.',
 };
 
 /** Design system §6 status mapping for change requests. */

@@ -133,13 +133,21 @@ const analysis: AnalysisResponse = {
       modelVerdict: 'CHANGES_AGREED_SCOPE',
       rationale: 'It extends the agreed login.',
       baselineSufficient: true,
-      evidence: [
+      coverage: 'PARTIAL',
+      messageCoverage: 1,
+      asks: [
         {
-          requirementId: R1,
-          requirementKey: 'REQ-2',
-          requirementTitle: 'Customer login',
-          relation: 'CHANGES',
-          explanation: 'REQ-2 defines email login only.',
+          quote: 'add login with WhatsApp OTP',
+          status: 'CHANGES',
+          citations: [
+            {
+              requirementId: R1,
+              requirementKey: 'REQ-2',
+              requirementTitle: 'Customer login',
+              relation: 'CHANGES',
+              quote: 'Sign in with email and password',
+            },
+          ],
         },
       ],
       adjustments: [],
@@ -518,9 +526,11 @@ describe('S-07 AiSuggestionPanel (FR-021, FR-051)', () => {
     const check = await screen.findByRole('region', { name: 'Scope check' });
     expect(check).toHaveTextContent('Changes agreed scope');
     expect(check).toHaveTextContent('It modifies or extends an agreed requirement');
+    expect(check).toHaveTextContent('“add login with WhatsApp OTP” — Changes the agreed scope');
     expect(check).toHaveTextContent(
-      'REQ-2 Customer login is changed by it: REQ-2 defines email login only.',
+      'Changes REQ-2 Customer login: “Sign in with email and password”',
     );
+    expect(check).toHaveTextContent('Coverage: Only part of the request is backed');
     expect(screen.queryByText(/SoloOps changed the AI/)).not.toBeInTheDocument();
   });
 
@@ -534,7 +544,9 @@ describe('S-07 AiSuggestionPanel (FR-021, FR-051)', () => {
           modelVerdict: 'LIKELY_ALREADY_COVERED',
           rationale: 'Login is covered.',
           baselineSufficient: true,
-          evidence: [],
+          coverage: 'NONE',
+          messageCoverage: 0,
+          asks: [],
           adjustments: ['REQ-9 does not exist in this project, so it was removed.'],
         },
       },
@@ -544,11 +556,57 @@ describe('S-07 AiSuggestionPanel (FR-021, FR-051)', () => {
     await user.click(screen.getByRole('button', { name: 'Analyse with AI' }));
     const check = await screen.findByRole('region', { name: 'Scope check' });
     expect(check).toHaveTextContent('Unclear');
-    expect(check).toHaveTextContent('No agreed requirement was cited as evidence.');
+    expect(check).toHaveTextContent('No part of the request could be matched to the message.');
     expect(check).toHaveTextContent(
-      'The AI said “Likely already covered”, but its evidence did not support that',
+      'The AI said “Likely already covered”, but SoloOps decides the verdict from the evidence it could verify',
     );
     expect(check).toHaveTextContent('REQ-9 does not exist');
+  });
+
+  it('CT-SC-03 BR-031 per-ask proof is shown in words: covered asks quote the requirement, the rest say "Not in the agreed scope"', async () => {
+    api.changeRequests.analyze.mockResolvedValue({
+      ...analysis,
+      suggestion: {
+        ...analysis.suggestion,
+        scope: {
+          verdict: 'UNCLEAR',
+          modelVerdict: 'LIKELY_ALREADY_COVERED',
+          rationale: 'All covered.',
+          baselineSufficient: true,
+          coverage: 'PARTIAL',
+          messageCoverage: 0.9,
+          asks: [
+            {
+              quote: 'reset a forgotten password by email',
+              status: 'COVERED',
+              citations: [
+                {
+                  requirementId: R1,
+                  requirementKey: 'REQ-2',
+                  requirementTitle: 'Customer login',
+                  relation: 'COVERS',
+                  quote: 'A forgotten password can be reset by email',
+                },
+              ],
+            },
+            { quote: 'add gift cards', status: 'NOT_COVERED', citations: [] },
+          ],
+          adjustments: ['Only part of the request is shown to be covered by agreed requirements.'],
+        },
+      },
+    });
+    const user = userEvent.setup();
+    panel();
+    await user.click(screen.getByRole('button', { name: 'Analyse with AI' }));
+    const check = await screen.findByRole('region', { name: 'Scope check' });
+    const proof = within(check).getByRole('list', { name: 'What the client asks for, with proof' });
+    expect(proof).toHaveTextContent('“reset a forgotten password by email” — In the agreed scope');
+    expect(proof).toHaveTextContent(
+      'Covered by REQ-2 Customer login: “A forgotten password can be reset by email”',
+    );
+    expect(proof).toHaveTextContent('“add gift cards” — Not in the agreed scope');
+    expect(check).toHaveTextContent('Unclear');
+    expect(check).toHaveTextContent('SoloOps changed the AI’s verdict');
   });
 
   it.each([

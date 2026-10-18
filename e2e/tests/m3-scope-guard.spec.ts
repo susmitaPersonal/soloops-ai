@@ -96,7 +96,11 @@ test('E2E-WF-04…07 change request → AI estimate (mock) → propose → clien
   // FR-021 scope check: compared with the AGREED requirements, evidence resolved to REQ-1.
   const scopeCheck = page.getByRole('region', { name: 'Scope check' });
   await expect(scopeCheck).toContainText('Changes agreed scope');
-  await expect(scopeCheck).toContainText('REQ-1 Customer login is changed by it');
+  // BR-031 per-ask proof: the ask quotes the client, the proof quotes the agreed requirement.
+  await expect(scopeCheck).toContainText('Changes the agreed scope');
+  await expect(scopeCheck).toContainText(
+    'Changes REQ-1 Customer login: “Customers sign in with email and password.”',
+  );
   await expect(page.getByText(/Indicative cost \(calculated by SoloOps/)).toContainText(
     '₹9,000.00',
   );

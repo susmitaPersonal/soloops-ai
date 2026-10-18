@@ -84,6 +84,7 @@ export async function baselinedProject(page: Page, ws: string) {
   });
   const requirement = await apiAs(page, 'POST', `${base}/projects/${project.id}/requirements`, {
     title: 'Customer login',
+    description: 'Customers sign in with email and password.',
     priority: 'MUST',
   });
   await apiAs(page, 'POST', `${base}/projects/${project.id}/baselines`, {});

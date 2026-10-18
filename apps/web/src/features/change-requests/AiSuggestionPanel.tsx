@@ -11,7 +11,13 @@ import { browserApi } from '@/lib/api/browser';
 import { describeError } from '@/lib/api/errors';
 import styles from '@/features/core-ops/core-ops.module.css';
 import { formatMoney } from '@/features/core-ops/money';
-import { EVIDENCE_RELATION, formatMinutes, SCOPE_VERDICT } from './cr-labels';
+import {
+  ASK_RELATION,
+  ASK_STATUS,
+  formatMinutes,
+  SCOPE_COVERAGE,
+  SCOPE_VERDICT,
+} from './cr-labels';
 
 export type SuggestionField =
   | 'clarifiedDescription'
@@ -72,9 +78,10 @@ function preview(result: AnalysisResponse, field: SuggestionField): string {
 }
 
 /**
- * FR-021 scope check: the verdict SoloOps stands behind after checking the AI's evidence against
- * the project's real, agreed requirements. When the evidence did not support the AI's own verdict,
- * that is said openly. Plain text only (SEC-009); the verdict is a suggestion until a person applies
+ * FR-021 scope check (BR-031, ADR-0023): SoloOps, not the AI, decides the verdict from quotes it
+ * verified — each ask quoted from the client message, each proof quoted from an agreed requirement.
+ * Per-ask proof and coverage are shown in words; when SoloOps' verdict differs from the AI's, that
+ * is said openly. Plain text only (SEC-009); the verdict is a suggestion until a person applies
  * and proposes it.
  */
 function ScopeCheck({ scope }: { scope: AnalysisResponse['suggestion']['scope'] }) {
@@ -89,24 +96,40 @@ function ScopeCheck({ scope }: { scope: AnalysisResponse['suggestion']['scope'] 
       </div>
       <p className={styles.muted}>{verdict.help}</p>
       {scope.rationale ? <p className={styles.preLine}>{scope.rationale}</p> : null}
-      {scope.evidence.length > 0 ? (
-        <ul aria-label="Evidence from agreed requirements">
-          {scope.evidence.map((e) => (
-            <li key={e.requirementId}>
-              <strong>
-                {e.requirementKey} {e.requirementTitle}
-              </strong>{' '}
-              {EVIDENCE_RELATION[e.relation]}: {e.explanation}
+      <p>
+        <strong>Coverage:</strong> {SCOPE_COVERAGE[scope.coverage]}
+      </p>
+      {scope.asks.length > 0 ? (
+        <ul aria-label="What the client asks for, with proof">
+          {scope.asks.map((a) => (
+            <li key={a.quote}>
+              <span className={styles.preLine}>“{a.quote}”</span> —{' '}
+              <strong>{ASK_STATUS[a.status]}</strong>
+              {a.citations.length > 0 ? (
+                <ul>
+                  {a.citations.map((c) => (
+                    <li key={`${c.requirementKey}-${c.relation}`}>
+                      {ASK_RELATION[c.relation]} {c.requirementKey} {c.requirementTitle}: “{c.quote}
+                      ”
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </li>
           ))}
         </ul>
       ) : (
-        <p className={styles.muted}>No agreed requirement was cited as evidence.</p>
+        <p className={styles.muted}>No part of the request could be matched to the message.</p>
       )}
+      <p className={styles.muted}>
+        SoloOps checked that every quote appears word for word in the client’s message or in an
+        agreed requirement. Whether a quote really means the same thing is still for you to judge.
+      </p>
       {scope.verdict !== scope.modelVerdict ? (
         <Alert tone="warning" title="SoloOps changed the AI’s verdict">
-          The AI said “{SCOPE_VERDICT[scope.modelVerdict].label}”, but its evidence did not support
-          that, so SoloOps shows “{verdict.label}”. {scope.adjustments.join(' ')}
+          The AI said “{SCOPE_VERDICT[scope.modelVerdict].label}”, but SoloOps decides the verdict
+          from the evidence it could verify, so it shows “{verdict.label}”.{' '}
+          {scope.adjustments.join(' ')}
         </Alert>
       ) : scope.adjustments.length > 0 ? (
         <Alert tone="warning" title="Some evidence was removed">
