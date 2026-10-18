@@ -23,7 +23,7 @@
 │           ├── main.ts          # wires real deps, starts @hono/node-server
 │           ├── app.ts           # createApp(deps): Hono app (used by tests)
 │           ├── platform/        # config, db, http middleware, logging, clock, ids, errors
-│           └── modules/         # identity, workspace, core-ops, scope-guard, billing, ai, audit, community, dashboard
+│           └── modules/         # identity, workspace, core-ops, scope-guard, billing, ai, audit (planned, not built: community, dashboard)
 ├── packages/
 │   ├── contracts/               # @soloops/contracts: Zod DTOs, enums, error codes, route paths (deps: zod)
 │   ├── api-client/              # @soloops/api-client: typed fetch client (deps: @soloops/contracts)

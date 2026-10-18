@@ -1,6 +1,6 @@
 # Deployment Architecture
 
-> **Status:** Proposed. Commands below become valid once milestone M1 scaffolds the repository. Until then they describe intended behaviour.
+> **Status:** Proposed for production and **not verified**. The repository has no Dockerfile or container images, and no production deployment has been done. Backup and restore have not been rehearsed (NFR-016). Local development (Docker Compose MongoDB plus `npm run dev`) is in [local development](../engineering/local-development.md). Sections that mention images describe intended behaviour only.
 
 ## Environments
 

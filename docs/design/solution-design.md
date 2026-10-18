@@ -2,7 +2,7 @@
 
 This document explains how SoloOps AI solves the problem described in the [product overview](../product/product-overview.md). For implementation structure, see the [architecture overview](../architecture/architecture-overview.md).
 
-> **Status:** Design. Nothing in this document is implemented yet. See [implementation status](../quality/implementation-status.md).
+> **Status:** Design, implemented for milestones M1–M5. Requirements that are not built (for example FR-004, FR-016, FR-017, FR-060–FR-062) remain design only. See [implementation status](../quality/implementation-status.md).
 
 ## 1. Problem → solution
 

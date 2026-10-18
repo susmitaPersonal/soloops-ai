@@ -1,6 +1,6 @@
 # Architecture Overview
 
-> **Status:** Proposed. No code exists yet ([repository assessment](../repository-assessment.md)). When implementation diverges, update this document or write an ADR. Never leave them inconsistent.
+> **Status:** Implemented for milestones M1–M5. Parts that serve unbuilt requirements are still planned: the `community` and `dashboard` modules, members (FR-004) and the audit log UI (FR-016). [Implementation status](../quality/implementation-status.md) is the source of truth. When implementation diverges, update this document or write an ADR. Never leave them inconsistent.
 
 ## Key decisions at a glance
 
@@ -53,7 +53,7 @@ flowchart LR
     WEB -->|"server-side GETs<br/>API_INTERNAL_URL + forwarded cookie"| API
     subgraph API_internals[apps/api]
         MW[platform middleware<br/>requestId · logging · secure headers · CSRF ·<br/>rate limit · session · membership · idempotency · errors]
-        MODS[modules<br/>identity · workspace · core-ops · scope-guard ·<br/>billing · ai · audit · community · dashboard]
+        MODS[modules<br/>identity · workspace · core-ops · scope-guard ·<br/>billing · ai · audit<br/>planned: community · dashboard]
         DAL[platform/db<br/>TenantCollection · withTransaction · migrations]
         MW --> MODS --> DAL
     end

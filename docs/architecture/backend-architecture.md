@@ -1,6 +1,6 @@
 # Backend Architecture
 
-> **Status:** Proposed. Decisions: [ADR-0003 (modular monolith)](adr/0003-modular-monolith.md), [ADR-0010 (Hono)](adr/0010-hono-api-on-node.md), [ADR-0012 (MongoDB)](adr/0012-mongodb-and-data-access.md).
+> **Status:** Implemented for M1–M5: the `identity`, `workspace`, `core-ops`, `scope-guard`, `billing`, `ai` and `audit` modules exist in `apps/api/src/modules`. The `community` and `dashboard` modules are **planned (not built)**. Decisions: [ADR-0003 (modular monolith)](adr/0003-modular-monolith.md), [ADR-0010 (Hono)](adr/0010-hono-api-on-node.md), [ADR-0012 (MongoDB)](adr/0012-mongodb-and-data-access.md).
 
 ## Style: modular monolith on Hono
 
@@ -39,8 +39,8 @@ apps/api/src/
 | `billing` | billableEntries, invoices | `classifyEntries()` |
 | `ai` | aiGenerations | `AnalyzerPort` implementation `analyzeChangeRequest()` |
 | `audit` | auditEvents | `record(tx, event)` |
-| `community` | — (templates as files) | `exportWorkspace()` |
-| `dashboard` | — (read-only composition) | `getDashboard(ctx)`. It calls the public read APIs of scope-guard, billing and core-ops. **No module depends on `dashboard`**, and it performs no writes (FR-017) |
+| `community` *(planned, not built)* | — (templates as files) | `exportWorkspace()` |
+| `dashboard` *(planned, not built)* | — (read-only composition) | `getDashboard(ctx)`. It calls the public read APIs of scope-guard, billing and core-ops. **No module depends on `dashboard`**, and it performs no writes (FR-017) |
 | `platform` | idempotencyKeys, schemaMigrations | middleware and db helpers |
 
 A module **must not** query another module's collections. It calls that module's public API and passes the transaction session when atomicity is needed.

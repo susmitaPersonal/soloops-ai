@@ -1,6 +1,6 @@
 # UI/UX Design System
 
-> **Status:** Proposed. No UI exists yet. Colour contrast values in this document were **computed** with `node scripts/check-contrast.mjs` (90 token pairs, 0 failures on 2026-10-16). That checks colour math only. Rendered screens have **not** been audited for accessibility; that happens in M2+ with axe and manual keyboard checks (A11Y-007). Screens are specified in [screen specifications](screen-specifications.md). The frontend structure is in [frontend architecture](../architecture/frontend-architecture.md).
+> **Status:** Implemented in `apps/web` for M1–M5. Colour contrast values in this document were **computed** with `node scripts/check-contrast.mjs` (90 token pairs, 0 failures; re-run on 2026-10-19). That checks colour math only. Rendered screens are checked by axe in the E2E suite: no serious or critical violations (A11Y-007). Only sign-in has a keyboard-path test, and no screen-reader test has been done. Screens are specified in [screen specifications](screen-specifications.md). The frontend structure is in [frontend architecture](../architecture/frontend-architecture.md).
 
 ## 1. Design principles
 

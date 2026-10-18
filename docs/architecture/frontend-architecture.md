@@ -1,6 +1,6 @@
 # Frontend Architecture
 
-> **Status:** Proposed. Decisions: [ADR-0009 (Next.js App Router)](adr/0009-nextjs-app-router-frontend.md), [ADR-0013 (web-to-API communication)](adr/0013-web-api-communication.md).
+> **Status:** Implemented for M1–M5 (`apps/web`). Screens for unbuilt requirements (members FR-004, audit log FR-016, dashboard FR-017) are planned. [Implementation status](../quality/implementation-status.md) is the source of truth. Decisions: [ADR-0009 (Next.js App Router)](adr/0009-nextjs-app-router-frontend.md), [ADR-0013 (web-to-API communication)](adr/0013-web-api-communication.md).
 
 ## Principle
 

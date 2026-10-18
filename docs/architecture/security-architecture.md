@@ -1,6 +1,6 @@
 # Security Architecture
 
-> **Status:** Proposed. Requirements SEC-001…011, PRV-001…005 are in [requirements](../product/requirements.md#security-requirements). Use the `soloops-security-review` skill or the `security-reviewer` agent for reviews.
+> **Status:** Implemented for every shipped endpoint (M1–M5; isolation matrix TC-SEC-01/02 covers all 51 tenant routes). Controls for unbuilt features (member management FR-004) are planned. Requirements SEC-001…011, PRV-001…005 are in [requirements](../product/requirements.md#security-requirements). Use the `soloops-security-review` skill or the `security-reviewer` agent for reviews.
 
 ## Threat model summary
 
