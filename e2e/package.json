@@ -1,0 +1,19 @@
+{
+  "name": "@soloops/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright end-to-end tests against the built web and API with a real MongoDB replica set (ADR-0014).",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.64.1",
+    "@soloops/api-client": "0.0.0",
+    "@soloops/contracts": "0.0.0",
+    "mongodb": "7.7.0",
+    "mongodb-memory-server": "11.3.0"
+  }
+}
